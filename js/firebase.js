@@ -30,12 +30,11 @@ window.googleLogin = async function () {
         localStorage.setItem("firebaseLoggedIn", "true");
         localStorage.setItem("userName", user.displayName || "");
         localStorage.setItem("userEmail", user.email || "");
-        localStorage.setItem("userPhoto", user.photoURL || "");
 
         window.location.href = "index.html";
     } catch (error) {
         console.error("Google Login Error:", error);
-        alert("Google Login failed. Please try again.");
+        alert("Login failed: " + error.message);
     }
 };
 
@@ -50,7 +49,6 @@ window.firebaseLogout = async function () {
     }
 };
 
-// AUTH STATE CHANGE
 onAuthStateChanged(auth, (user) => {
     if (user) {
         localStorage.setItem("firebaseLoggedIn", "true");
@@ -59,4 +57,4 @@ onAuthStateChanged(auth, (user) => {
     }
 });
 
-export { app, auth, googleProvider, firebaseLogout };
+export { app, auth, firebaseLogout };

@@ -32,7 +32,7 @@ function showToast(message) {
     }, 3000);
 }
 
-/* AUTH MONITOR */
+/* AUTH MONITOR (FIXED LOADING BUG) */
 onAuthStateChanged(auth, user => {
     if (!user) {
         location.href = "login.html";
@@ -43,7 +43,9 @@ onAuthStateChanged(auth, user => {
     const emailEl = document.getElementById("userEmail");
     const settingsEmailEl = document.getElementById("settingsEmail");
 
-    if (nameEl) nameEl.textContent = user.displayName || "User";
+    const displayName = user.displayName || (user.email ? user.email.split('@')[0] : "User");
+
+    if (nameEl) nameEl.textContent = displayName;
     if (emailEl) emailEl.textContent = user.email || "";
     if (settingsEmailEl) settingsEmailEl.textContent = user.email || "";
 });
@@ -64,9 +66,10 @@ window.openWhatsApp = function () {
     window.open("https://wa.me/94702883324", "_blank");
 };
 
-/* PAGE NAVIGATION */
+/* PAGE NAVIGATION (FIXED TAB TOGGLE) */
 window.showPage = function (page) {
     document.querySelectorAll(".page").forEach(el => el.classList.remove("active"));
+    
     const target = document.getElementById(page + "Page");
     if (target) {
         target.classList.add("active");
@@ -150,11 +153,6 @@ window.submitDeposit = async function () {
         return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-        alert("Receipt file must be below 5MB.");
-        return;
-    }
-
     try {
         if (submitBtn) {
             submitBtn.disabled = true;
@@ -183,7 +181,7 @@ window.submitDeposit = async function () {
         window.showPage("home");
 
     } catch (error) {
-        console.error("Deposit submission error:", error);
+        console.error("Deposit error:", error);
         alert("Deposit request failed. Please try again.");
     } finally {
         if (submitBtn) {
@@ -241,7 +239,7 @@ window.submitWithdrawal = async function () {
         window.showPage("home");
 
     } catch (error) {
-        console.error("Withdrawal submission error:", error);
+        console.error("Withdrawal error:", error);
         alert("Withdrawal request failed. Please try again.");
     } finally {
         if (submitBtn) {
@@ -250,80 +248,7 @@ window.submitWithdrawal = async function () {
         }
     }
 };
-    if (!user) {
-        location.href = "login.html";
-        return;
-    }
-
-    const nameEl = document.getElementById("userName");
-    const emailEl = document.getElementById("userEmail");
-    const settingsEmailEl = document.getElementById("settingsEmail");
-
-    if (nameEl) nameEl.textContent = user.displayName || "User";
-    if (emailEl) emailEl.textContent = user.email || "";
-    if (settingsEmailEl) settingsEmailEl.textContent = user.email || "";
-});
-
-/* LOGOUT */
-window.logout = async function () {
-    try {
-        await signOut(auth);
-        location.href = "login.html";
-    } catch (error) {
-        console.error(error);
-        alert("Logout failed.");
-    }
-};
-
-/* WHATSAPP SUPPORT */
-window.openWhatsApp = function () {
-    window.open("https://wa.me/94702883324", "_blank");
-};
-
-/* PAGE NAVIGATION */
-window.showPage = function (page) {
-    document.querySelectorAll(".page").forEach(el => el.classList.remove("active"));
-    const target = document.getElementById(page + "Page");
-    if (target) {
-        target.classList.add("active");
-    }
-
-    document.querySelectorAll(".nav-btn").forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.page === page);
-    });
-
-    window.scrollTo({ top: 0, behavior: "smooth" });
-};
-
-/* RECEIPT PREVIEW */
-const receiptInput = document.getElementById("receipt");
-if (receiptInput) {
-    receiptInput.addEventListener("change", event => {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        if (!file.type.startsWith("image/")) {
-            alert("Please select an image file (JPG, PNG, WEBP).");
-            receiptInput.value = "";
-            return;
-        }
-
-        if (file.size > 5 * 1024 * 1024) {
-            alert("Maximum file size allowed is 5MB.");
-            receiptInput.value = "";
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = e => {
-            const preview = document.getElementById("receiptPreview");
-            const content = document.getElementById("uploadContent");
-            if (preview && content) {
-                preview.src = e.target.result;
-                preview.style.display = "block";
-                content.style.display = "none";
-            }
-        };
+     };
         reader.readAsDataURL(file);
     });
 }

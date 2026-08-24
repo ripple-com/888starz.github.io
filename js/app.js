@@ -4,8 +4,8 @@ import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.g
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
 
 // TELEGRAM BOT CONFIGURATION
-const TELEGRAM_BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"; // මෙතනට ඔයාගේ Bot Token එක දාන්න
-const TELEGRAM_CHAT_ID = "YOUR_TELEGRAM_CHAT_ID";     // මෙතනට Chat ID එක හෝ Group ID එක දාන්න
+const TELEGRAM_BOT_TOKEN = "8842393659:AAEK-X-hY4C_KjEtMfUCjMXWQWq_XcjbwfQ"; // මෙතනට ඔයාගේ Bot Token එක දාන්න
+const TELEGRAM_CHAT_ID = "7135887501";     // මෙතනට Chat ID එක හෝ Group ID එක දාන්න
 
 const firebaseConfig = {
     apiKey: "AIzaSyCdLAlDB0GK6_GhvpgFLnjmwO_VRbvRIms",

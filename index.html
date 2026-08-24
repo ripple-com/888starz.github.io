@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>888STARZ Agent | Dashboard</title>
     <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Firebase Compatibility SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 </head>
 <body>
 
@@ -51,8 +57,8 @@
 
         <div class="user-card">
             <div>
-                <strong id="userName">Loading...</strong>
-                <small id="userEmail">Loading...</small>
+                <strong id="userName">User Account</strong>
+                <small id="userEmail">Checking session...</small>
             </div>
             <button type="button" onclick="logout()">Logout</button>
         </div>
@@ -81,7 +87,7 @@
                     <strong>Upload Receipt</strong>
                     <span>JPG / PNG / WEBP — Max 5MB</span>
                 </div>
-                <input type="file" id="receipt" accept="image/jpeg,image/png,image/webp">
+                <input type="file" id="receipt" accept="image/*" onchange="previewImage(event)">
             </div>
 
             <label>DEPOSIT AMOUNT</label>
@@ -149,7 +155,7 @@
                 <div class="setting-icon">👤</div>
                 <div class="setting-info">
                     <h3>Account</h3>
-                    <p id="settingsEmail">Loading...</p>
+                    <p id="settingsEmail">Checking session...</p>
                 </div>
             </div>
 
@@ -202,8 +208,201 @@
 <!-- TOAST -->
 <div id="toast" class="toast"></div>
 
-<!-- JS -->
-<script type="module" src="js/app.js"></script>
+<!-- MAIN SCRIPT (INLINED TO PREVENT MODULE BREAKAGE) -->
+<script>
+    // 1. FIREBASE CONFIGURATION (මෙතැනට ඔබගේ Firebase Config Keys දමන්න)
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
+
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const storage = firebase.storage();
+
+    // 2. PAGE TOGGLE
+    function showPage(page) {
+        document.querySelectorAll('.page').forEach(el => {
+            el.classList.remove('active');
+            el.style.display = 'none';
+        });
+
+        const target = document.getElementById(page + 'Page');
+        if (target) {
+            target.classList.add('active');
+            target.style.display = 'block';
+        }
+
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.page === page);
+        });
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 3. AUTH MONITOR
+    auth.onAuthStateChanged(user => {
+        const nameEl = document.getElementById("userName");
+        const emailEl = document.getElementById("userEmail");
+        const settingsEmailEl = document.getElementById("settingsEmail");
+
+        if (user) {
+            const displayName = user.displayName || (user.email ? user.email.split('@')[0] : "Agent User");
+            if (nameEl) nameEl.textContent = displayName;
+            if (emailEl) emailEl.textContent = user.email;
+            if (settingsEmailEl) settingsEmailEl.textContent = user.email;
+        } else {
+            // Logged in නැතහොත් login page එකට redirect කිරීම
+            if (nameEl) nameEl.textContent = "Guest";
+            if (emailEl) emailEl.textContent = "Not logged in";
+            if (settingsEmailEl) settingsEmailEl.textContent = "Not logged in";
+            window.location.href = "login.html";
+        }
+    });
+
+    // 4. LOGOUT & WHATSAPP
+    function logout() {
+        auth.signOut().then(() => {
+            window.location.href = "login.html";
+        });
+    }
+
+    function openWhatsApp() {
+        window.open("https://wa.me/94702883324", "_blank");
+    }
+
+    // 5. TOAST NOTIFICATION
+    function showToast(msg) {
+        const toast = document.getElementById("toast");
+        if (!toast) return;
+        toast.textContent = msg;
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 3000);
+    }
+
+    // 6. IMAGE PREVIEW
+    function previewImage(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = event => {
+            const preview = document.getElementById("receiptPreview");
+            const content = document.getElementById("uploadContent");
+            if (preview && content) {
+                preview.src = event.target.result;
+                preview.style.display = "block";
+                content.style.display = "none";
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    // 7. SUBMIT DEPOSIT
+    async function submitDeposit() {
+        const user = auth.currentUser;
+        if (!user) {
+            alert("Please login first.");
+            return;
+        }
+
+        const amount = document.getElementById("depositAmount").value.trim();
+        const name = document.getElementById("depositName").value.trim();
+        const gameId = document.getElementById("gameId").value.trim();
+        const whatsapp = document.getElementById("depositWhatsapp").value.trim();
+        const fileInput = document.getElementById("receipt");
+        const file = fileInput.files[0];
+        const btn = document.getElementById("depositSubmitBtn");
+
+        if (!amount || !name || !gameId || !whatsapp || !file) {
+            alert("Please fill in all fields and upload payment receipt.");
+            return;
+        }
+
+        try {
+            btn.disabled = true;
+            btn.textContent = "SUBMITTING...";
+
+            const fileRef = storage.ref(`receipts/${user.uid}/${Date.now()}_${file.name}`);
+            await fileRef.put(file);
+            const receiptURL = await fileRef.getDownloadURL();
+
+            await db.collection("depositRequests").add({
+                userId: user.uid,
+                name: name,
+                gameId: gameId,
+                whatsapp: whatsapp,
+                amount: Number(amount),
+                receiptURL: receiptURL,
+                status: "pending",
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            showToast("Deposit request submitted successfully!");
+            showPage("home");
+        } catch (err) {
+            console.error(err);
+            alert("Error: " + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "SUBMIT DEPOSIT REQUEST";
+        }
+    }
+
+    // 8. SUBMIT WITHDRAWAL
+    async function submitWithdrawal() {
+        const user = auth.currentUser;
+        if (!user) {
+            alert("Please login first.");
+            return;
+        }
+
+        const name = document.getElementById("withdrawName").value.trim();
+        const gameId = document.getElementById("withdrawGameId").value.trim();
+        const amount = document.getElementById("withdrawAmount").value.trim();
+        const whatsapp = document.getElementById("withdrawWhatsapp").value.trim();
+        const details = document.getElementById("withdrawDetails").value.trim();
+        const btn = document.getElementById("withdrawSubmitBtn");
+
+        if (!name || !gameId || !amount || !whatsapp || !details) {
+            alert("Please complete all details.");
+            return;
+        }
+
+        try {
+            btn.disabled = true;
+            btn.textContent = "SUBMITTING...";
+
+            await db.collection("withdrawalRequests").add({
+                userId: user.uid,
+                name: name,
+                gameId: gameId,
+                amount: Number(amount),
+                whatsapp: whatsapp,
+                paymentDetails: details,
+                status: "pending",
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            showToast("Withdrawal request submitted successfully!");
+            showPage("home");
+        } catch (err) {
+            console.error(err);
+            alert("Error: " + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "SUBMIT WITHDRAWAL REQUEST";
+        }
+    }
+</script>
 
 </body>
 </html>

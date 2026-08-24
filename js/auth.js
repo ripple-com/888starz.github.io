@@ -27,12 +27,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 const result = await signInWithPopup(auth, googleProvider);
                 const user = result.user;
 
-                // Cache user details locally
                 localStorage.setItem("firebaseLoggedIn", "true");
                 localStorage.setItem("userName", user.displayName || "");
                 localStorage.setItem("userEmail", user.email || "");
 
-                // Redirect to Dashboard
                 window.location.href = "index.html";
             } catch (error) {
                 console.error("Login Error:", error);

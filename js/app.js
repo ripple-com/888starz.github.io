@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
 
@@ -18,7 +18,16 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// 1. Navigation Logic Function
+// Toast Alert
+function showToast(message) {
+    const toast = document.getElementById("toast");
+    if (!toast) return;
+    toast.textContent = message;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 2800);
+}
+
+// Navigation Function
 function showPage(page) {
     document.querySelectorAll(".page").forEach(el => el.classList.remove("active"));
     const target = document.getElementById(page + "Page");
@@ -30,7 +39,7 @@ function showPage(page) {
     window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-// 2. Dynamic User Information Renderer
+// Dynamic Profile Details Update
 function renderUserInfo(user) {
     const nameEl = document.getElementById("userName");
     const emailEl = document.getElementById("userEmail");
@@ -46,12 +55,11 @@ function renderUserInfo(user) {
     }
 }
 
-// 3. Main Initialization on DOM Ready
+// DOM Handlers Init
 document.addEventListener("DOMContentLoaded", () => {
-    // Render initial UI from local state immediately
     renderUserInfo(null);
 
-    // Event Listener Routing for Navigation Buttons
+    // Event Listener Routing for Navigation
     document.querySelectorAll("[data-page]").forEach(btn => {
         btn.addEventListener("click", (e) => {
             const page = e.currentTarget.getAttribute("data-page");
@@ -59,7 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Image Slider Setup
+    // Image Slider
     const slides = document.querySelectorAll(".slide");
     const dots = document.querySelectorAll(".slider-dot");
     let currentSlide = 0;
@@ -74,7 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 4000);
     }
 
-    // Receipt File Preview Listener
+    // File Preview
     const receiptInput = document.getElementById("receipt");
     if (receiptInput) {
         receiptInput.addEventListener("change", function () {
@@ -95,8 +103,8 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Logout Click Handlers
-    const logoutBtn = document.querySelector(".logout-btn");
+    // Logout Action
+    const logoutBtn = document.getElementById("logoutBtn");
     if (logoutBtn) {
         logoutBtn.addEventListener("click", async () => {
             try {
@@ -108,9 +116,102 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+
+    // Toggle Notifications
+    const toggleBtn = document.getElementById("toggleNotifBtn");
+    if (toggleBtn) {
+        toggleBtn.addEventListener("click", () => {
+            toggleBtn.classList.toggle("on");
+        });
+    }
+
+    // Support Link
+    const whatsappBtn = document.getElementById("whatsappSupportBtn");
+    if (whatsappBtn) {
+        whatsappBtn.addEventListener("click", () => {
+            window.open("https://wa.me/94702883324", "_blank");
+        });
+    }
+
+    // Deposit Submit Action
+    const depositSubmitBtn = document.getElementById("depositSubmitBtn");
+    if (depositSubmitBtn) {
+        depositSubmitBtn.addEventListener("click", async () => {
+            const user = auth.currentUser;
+            const amount = document.getElementById("depositAmount").value.trim();
+            const name = document.getElementById("depositName").value.trim();
+            const gameId = document.getElementById("gameId").value.trim();
+            const whatsapp = document.getElementById("depositWhatsapp").value.trim();
+            const fileInput = document.getElementById("receipt");
+            const file = fileInput ? fileInput.files[0] : null;
+
+            if (!file || !amount || !name || !gameId || !whatsapp) {
+                showToast("Please fill all fields and upload receipt.");
+                return;
+            }
+
+            try {
+                depositSubmitBtn.disabled = true;
+                depositSubmitBtn.textContent = "SUBMITTING...";
+
+                const userId = user ? user.uid : "guest";
+                const fileRef = ref(storage, `receipts/${userId}/${Date.now()}_${file.name}`);
+                await uploadBytes(fileRef, file);
+                const receiptURL = await getDownloadURL(fileRef);
+
+                await addDoc(collection(db, "depositRequests"), {
+                    userId, name, gameId, whatsapp, amount: Number(amount), receiptURL, status: "pending", createdAt: serverTimestamp()
+                });
+
+                showToast("Deposit request submitted successfully!");
+                showPage("home");
+            } catch (err) {
+                showToast("Error: " + err.message);
+            } finally {
+                depositSubmitBtn.disabled = false;
+                depositSubmitBtn.textContent = "SUBMIT DEPOSIT REQUEST";
+            }
+        });
+    }
+
+    // Withdrawal Submit Action
+    const withdrawSubmitBtn = document.getElementById("withdrawSubmitBtn");
+    if (withdrawSubmitBtn) {
+        withdrawSubmitBtn.addEventListener("click", async () => {
+            const user = auth.currentUser;
+            const name = document.getElementById("withdrawName").value.trim();
+            const gameId = document.getElementById("withdrawGameId").value.trim();
+            const amount = document.getElementById("withdrawAmount").value.trim();
+            const whatsapp = document.getElementById("withdrawWhatsapp").value.trim();
+            const details = document.getElementById("withdrawDetails").value.trim();
+
+            if (!name || !gameId || !amount || !whatsapp || !details) {
+                showToast("Please fill all fields.");
+                return;
+            }
+
+            try {
+                withdrawSubmitBtn.disabled = true;
+                withdrawSubmitBtn.textContent = "SUBMITTING...";
+
+                const userId = user ? user.uid : "guest";
+                await addDoc(collection(db, "withdrawalRequests"), {
+                    userId, name, gameId, amount: Number(amount), whatsapp, paymentDetails: details, status: "pending", createdAt: serverTimestamp()
+                });
+
+                showToast("Withdrawal request submitted successfully!");
+                showPage("home");
+            } catch (err) {
+                showToast("Error: " + err.message);
+            } finally {
+                withdrawSubmitBtn.disabled = false;
+                withdrawSubmitBtn.textContent = "SUBMIT WITHDRAWAL REQUEST";
+            }
+        });
+    }
 });
 
-// 4. Firebase Auth Sync
+// Auth Listener
 onAuthStateChanged(auth, (user) => {
     if (user) {
         localStorage.setItem("firebaseLoggedIn", "true");

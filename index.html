@@ -22,6 +22,9 @@
     --input-bg: #090909;
     --nav-bg: rgba(17, 17, 17, 0.95);
     --toggle-bg: #303030;
+    --red-bg: rgba(255, 77, 77, 0.12);
+    --red-border: rgba(255, 77, 77, 0.3);
+    --red-text: #ff4d4d;
 }
 
 /* LIGHT MODE OVERRIDES */
@@ -103,12 +106,6 @@ button { cursor:pointer; }
 .quick-card h3 { margin-top:14px; font-size:14px; }
 .quick-card p { margin-top:5px; color:var(--muted); font-size:9px; }
 
-/* USER CARD */
-.user-card { margin-top: 15px; padding: 16px 20px; background: var(--card); border: 1px solid var(--line); border-radius: 20px; display: flex; align-items: center; justify-content: space-between; }
-.user-card strong { display: block; font-size: 13px; color: var(--text); }
-.user-card small { font-size: 10px; color: var(--muted); }
-.logout-btn { background: rgba(255,105,0,.15); color: var(--orange); border: 1px solid rgba(255,105,0,.3); padding: 8px 16px; border-radius: 12px; font-size: 10px; font-weight: 900; }
-
 /* FORMS */
 .page-header { padding:35px 0 22px; }
 .page-header small { color:var(--orange); font-size:9px; font-weight:950; letter-spacing:1.3px; }
@@ -138,6 +135,18 @@ button { cursor:pointer; }
 .setting-icon { width:42px; height:42px; flex-shrink:0; display:grid; place-items:center; border-radius:13px; background:var(--card2); color:var(--orange); }
 .setting-icon svg { width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.8; }
 .setting-info { flex:1; }
+
+/* USER PROFILE IN SETTINGS */
+.user-profile-item { border-color: rgba(255, 105, 0, 0.2); }
+.user-avatar-large { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--orange), var(--orange2)); color: #070707; display: grid; place-items: center; font-size: 18px; font-weight: 900; }
+.setting-info strong { display: block; font-size: 14px; color: var(--text); }
+.setting-info small { font-size: 10px; color: var(--muted); }
+
+/* LOGOUT BUTTON IN SETTINGS */
+.logout-item { background: var(--red-bg); border-color: var(--red-border); cursor: pointer; transition: background 0.2s; }
+.logout-item:hover { background: rgba(255, 77, 77, 0.2); }
+.logout-item .setting-icon { background: rgba(255, 77, 77, 0.15); color: var(--red-text); }
+.logout-item h3 { color: var(--red-text); }
 
 /* LANGUAGE SELECTOR */
 .lang-setting-card { flex-direction: column; align-items: stretch !important; gap: 14px; }
@@ -237,14 +246,6 @@ button { cursor:pointer; }
                 </button>
             </div>
 
-            <div class="user-card">
-                <div>
-                    <strong id="userName">User Account</strong>
-                    <small id="userEmail">Active Session</small>
-                </div>
-                <button type="button" class="logout-btn" id="logoutBtn" data-i18n="btnLogout">Logout</button>
-            </div>
-
             <div class="notice" data-i18n="homeNotice">
                 This is an independent agent service and is not the official 888Starz website.
             </div>
@@ -310,6 +311,15 @@ button { cursor:pointer; }
             </div>
             <div class="settings-list">
                 
+                <!-- USER PROFILE IN SETTINGS -->
+                <div class="setting-item user-profile-item">
+                    <div class="user-avatar-large" id="settingAvatarText">U</div>
+                    <div class="setting-info">
+                        <strong id="userName">User Account</strong>
+                        <small id="userEmail">Active Session</small>
+                    </div>
+                </div>
+
                 <!-- DARK / LIGHT THEME TOGGLE -->
                 <div class="setting-item">
                     <div class="setting-icon">
@@ -364,6 +374,18 @@ button { cursor:pointer; }
                     <div class="setting-info"><h3 data-i18n="lblSupport">Agent Support</h3><p data-i18n="descSupport">Contact WhatsApp support</p></div>
                     <div>→</div>
                 </div>
+
+                <!-- LOGOUT BUTTON IN SETTINGS -->
+                <div class="setting-item logout-item" id="logoutBtn">
+                    <div class="setting-icon">
+                        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    </div>
+                    <div class="setting-info">
+                        <h3 data-i18n="btnLogout">Logout</h3>
+                        <p data-i18n="descLogout">Sign out from your account</p>
+                    </div>
+                </div>
+
             </div>
         </div>
     </section>

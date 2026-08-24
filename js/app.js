@@ -21,7 +21,7 @@ const storage = getStorage(app);
 // MULTI-LANGUAGE DICTIONARY
 const translations = {
     en: {
-        onlineStatus: "ONLINE 24/7", subHeader: "INDEPENDENT AGENT SERVICE",
+        subHeader: "INDEPENDENT AGENT SERVICE",
         heroTitle: "Fast Deposit<br><span>&amp; Withdrawal</span>",
         heroDescription: "Deposit and withdrawal assistance for 888Starz customers. Verify payment details with the agent before transactions.",
         slide1Small: "FAST SERVICE", slide1Title: "Deposit<br>Made Easy", slide1Desc: "Upload your receipt and submit your deposit details.",
@@ -44,7 +44,7 @@ const translations = {
         msgFillAllW: "Please fill all fields.", msgWSuccess: "Withdrawal request submitted successfully!"
     },
     si: {
-        onlineStatus: "සක්‍රීයයි 24/7", subHeader: "ස්වාධීන නියෝජිත සේවාව",
+        subHeader: "ස්වාධීන නියෝජිත සේවාව",
         heroTitle: "ඉක්මන් තැන්පතු<br><span>සහ මුදල් ලබාගැනීම්</span>",
         heroDescription: "888Starz පාරිභෝගිකයින් සඳහා තැන්පතු සහ මුදල් ආපසු ගැනීමේ සහාය. ගනුදෙනුවකට පෙර නියෝජිතයා සමඟ විස්තර තහවුරු කරගන්න.",
         slide1Small: "වේගවත් සේවාව", slide1Title: "පහසු තැන්පතු", slide1Desc: "ඔබේ රිසිට්පත උඩුගත කර තැන්පතු විස්තර යොමු කරන්න.",
@@ -67,7 +67,7 @@ const translations = {
         msgFillAllW: "කරුණාකර සියලුම විස්තර ඇතුළත් කරන්න.", msgWSuccess: "මුදල් ලබාගැනීමේ ඉල්ලීම සාර්ථකව යොමු කෙරිණි!"
     },
     ta: {
-        onlineStatus: "ஆன்லைன் 24/7", subHeader: "சுயாதீன முகவர் சேவை",
+        subHeader: "சுயாதீன முகவர் சேவை",
         heroTitle: "வேகமான வைப்பு<br><span>மற்றும் திரும்பப் பெறுதல்</span>",
         heroDescription: "888Starz வாடிக்கையாளர்களுக்கான வைப்பு மற்றும் திரும்பப் பெறல் உதவி. பரிவர்த்தனைக்கு முன் முகவருடன் சரிபார்க்கவும்.",
         slide1Small: "வேகமான சேவை", slide1Title: "எளிதான வைப்பு", slide1Desc: "உங்கள் ரசீதை பதிவேற்றி விவரங்களை சமர்ப்பிக்கவும்.",
@@ -152,21 +152,36 @@ function showPage(page) {
 function renderUserInfo(user) {
     const nameEl = document.getElementById("userName");
     const emailEl = document.getElementById("userEmail");
+    const avatarTextEl = document.getElementById("avatarText");
 
     if (user) {
+        const displayName = user.displayName || user.email || "User";
         if (nameEl) nameEl.textContent = user.displayName || "User Account";
         if (emailEl) emailEl.textContent = user.email || "Active User";
+        
+        if (avatarTextEl) {
+            avatarTextEl.textContent = displayName.charAt(0).toUpperCase();
+        }
     } else {
         const cachedName = localStorage.getItem("userName");
         const cachedEmail = localStorage.getItem("userEmail");
         if (nameEl) nameEl.textContent = cachedName || "Guest User";
         if (emailEl) emailEl.textContent = cachedEmail || "Not Logged In";
+        
+        if (avatarTextEl) {
+            avatarTextEl.textContent = cachedName ? cachedName.charAt(0).toUpperCase() : "U";
+        }
     }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
     setLanguage(currentLang);
-    renderUserInfo(null);
+    renderUserInfo(auth.currentUser);
+
+    // Profile Avatar click -> Settings Page
+    document.getElementById("headerProfileAvatar")?.addEventListener("click", () => {
+        showPage("settings");
+    });
 
     // Language selection card click event
     document.querySelectorAll(".lang-option-card").forEach(card => {

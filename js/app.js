@@ -17,7 +17,7 @@ import {
 
 import { auth, db, storage } from "./firebase.js";
 
-/* TOAST */
+/* TOAST DISPLAY */
 function showToast(msg) {
     const toast = document.getElementById("toast");
     if (!toast) return;
@@ -26,77 +26,93 @@ function showToast(msg) {
     setTimeout(() => toast.classList.remove("show"), 3000);
 }
 
-/* AUTH MONITOR */
-onAuthStateChanged(auth, user => {
-    if (!user) {
-        window.location.href = "login.html";
-        return;
-    }
-
-    const nameEl = document.getElementById("userName");
-    const emailEl = document.getElementById("userEmail");
-    const settingsEmailEl = document.getElementById("settingsEmail");
-
-    const displayName = user.displayName || (user.email ? user.email.split('@')[0] : "User");
-
-    if (nameEl) nameEl.textContent = displayName;
-    if (emailEl) emailEl.textContent = user.email || "";
-    if (settingsEmailEl) settingsEmailEl.textContent = user.email || "";
-});
-
-/* NAVIGATION */
-window.showPage = function (page) {
-    document.querySelectorAll(".page").forEach(el => el.classList.remove("active"));
+/* PAGE TOGGLE (GLOBAL SCOPE ATTACHMENT) */
+function showPage(page) {
+    const pages = document.querySelectorAll(".page");
+    pages.forEach(el => {
+        el.classList.remove("active");
+        el.style.display = "none"; // Explicit hide for safety
+    });
     
     const target = document.getElementById(page + "Page");
     if (target) {
         target.classList.add("active");
+        target.style.display = "block"; // Explicit display
     }
 
-    document.querySelectorAll(".nav-btn").forEach(btn => {
+    const navBtns = document.querySelectorAll(".nav-btn");
+    navBtns.forEach(btn => {
         btn.classList.toggle("active", btn.dataset.page === page);
     });
 
     window.scrollTo({ top: 0, behavior: "smooth" });
-};
+}
+window.showPage = showPage;
 
-/* LOGOUT */
+/* AUTH MONITOR (SAFE FALLBACK INCLUDED) */
+onAuthStateChanged(auth, user => {
+    const nameEl = document.getElementById("userName");
+    const emailEl = document.getElementById("userEmail");
+    const settingsEmailEl = document.getElementById("settingsEmail");
+
+    if (user) {
+        const displayName = user.displayName || (user.email ? user.email.split('@')[0] : "User Account");
+        if (nameEl) nameEl.textContent = displayName;
+        if (emailEl) emailEl.textContent = user.email || "";
+        if (settingsEmailEl) settingsEmailEl.textContent = user.email || "";
+    } else {
+        // User නැතිනම් Guest ලෙස පෙන්වීම (සිරවීම වැළැක්වීමට)
+        if (nameEl) nameEl.textContent = "Guest User";
+        if (emailEl) emailEl.textContent = "Not Logged In";
+        if (settingsEmailEl) settingsEmailEl.textContent = "Not Logged In";
+    }
+});
+
+/* LOGOUT FUNCTION */
 window.logout = function () {
     signOut(auth).then(() => {
         window.location.href = "login.html";
+    }).catch(err => {
+        console.error("Logout error:", err);
     });
 };
 
-/* WHATSAPP */
+/* WHATSAPP SUPPORT */
 window.openWhatsApp = function () {
     window.open("https://wa.me/94702883324", "_blank");
 };
 
-/* FILE PREVIEW */
-const receiptInput = document.getElementById("receipt");
-if (receiptInput) {
-    receiptInput.addEventListener("change", e => {
-        const file = e.target.files[0];
-        if (!file) return;
+/* RECEIPT IMAGE PREVIEW */
+document.addEventListener("DOMContentLoaded", () => {
+    const receiptInput = document.getElementById("receipt");
+    if (receiptInput) {
+        receiptInput.addEventListener("change", e => {
+            const file = e.target.files[0];
+            if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = event => {
-            const preview = document.getElementById("receiptPreview");
-            const content = document.getElementById("uploadContent");
-            if (preview && content) {
-                preview.src = event.target.result;
-                preview.style.display = "block";
-                content.style.display = "none";
-            }
-        };
-        reader.readAsDataURL(file);
-    });
-}
+            const reader = new FileReader();
+            reader.onload = event => {
+                const preview = document.getElementById("receiptPreview");
+                const content = document.getElementById("uploadContent");
+                if (preview && content) {
+                    preview.src = event.target.result;
+                    preview.style.display = "block";
+                    content.style.display = "none";
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+});
 
 /* DEPOSIT SUBMIT */
 window.submitDeposit = async function () {
     const user = auth.currentUser;
-    if (!user) return;
+    if (!user) {
+        alert("Please login first to submit requests.");
+        window.location.href = "login.html";
+        return;
+    }
 
     const amount = document.getElementById("depositAmount").value.trim();
     const name = document.getElementById("depositName").value.trim();
@@ -128,10 +144,10 @@ window.submitDeposit = async function () {
         });
 
         showToast("Deposit request submitted successfully!");
-        window.showPage("home");
+        showPage("home");
     } catch (err) {
         console.error(err);
-        alert("Submission failed. Try again.");
+        alert("Submission failed. Error: " + err.message);
     } finally {
         btn.disabled = false;
         btn.textContent = "SUBMIT DEPOSIT REQUEST";
@@ -141,7 +157,11 @@ window.submitDeposit = async function () {
 /* WITHDRAWAL SUBMIT */
 window.submitWithdrawal = async function () {
     const user = auth.currentUser;
-    if (!user) return;
+    if (!user) {
+        alert("Please login first to submit requests.");
+        window.location.href = "login.html";
+        return;
+    }
 
     const name = document.getElementById("withdrawName").value.trim();
     const gameId = document.getElementById("withdrawGameId").value.trim();
@@ -168,10 +188,10 @@ window.submitWithdrawal = async function () {
         });
 
         showToast("Withdrawal request submitted successfully!");
-        window.showPage("home");
+        showPage("home");
     } catch (err) {
         console.error(err);
-        alert("Submission failed. Try again.");
+        alert("Submission failed. Error: " + err.message);
     } finally {
         btn.disabled = false;
         btn.textContent = "SUBMIT WITHDRAWAL REQUEST";

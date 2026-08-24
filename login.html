@@ -1,16 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width,initial-scale=1">
-
-<title>Agent Login</title>
-
-<link rel="stylesheet"
-href="css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Login</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
 
 <div class="login-page">
@@ -30,21 +25,16 @@ href="css/style.css">
         </h1>
 
         <p class="login-text">
-            Sign in to continue
-            to your agent dashboard.
+            Sign in to continue to your agent dashboard.
         </p>
 
-        <button
-            id="googleLogin"
-            class="google-btn"
-        >
+        <button id="googleLogin" class="google-btn">
             <span class="google-icon">G</span>
             Continue with Google
         </button>
 
         <p class="login-note">
-            By continuing, you agree to
-            use this service responsibly.
+            By continuing, you agree to use this service responsibly.
         </p>
 
     </div>
@@ -52,44 +42,24 @@ href="css/style.css">
 </div>
 
 <script type="module">
-
 import {
     GoogleAuthProvider,
     signInWithPopup
-} from
-"https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
 
 import { auth } from "./js/firebase.js";
 
-const provider =
-    new GoogleAuthProvider();
+const provider = new GoogleAuthProvider();
 
-document
-.getElementById("googleLogin")
-.addEventListener("click", async () => {
-
+document.getElementById("googleLogin").addEventListener("click", async () => {
     try {
-
-        await signInWithPopup(
-            auth,
-            provider
-        );
-
-        location.href =
-            "index.html";
-
-    } catch(error) {
-
-        console.error(error);
-
-        alert(
-            "Google Login failed."
-        );
-
+        await signInWithPopup(auth, provider);
+        location.href = "index.html";
+    } catch (error) {
+        console.error("Login Error:", error);
+        alert("Google Login failed. Please try again.");
     }
-
 });
-
 </script>
 
 </body>

@@ -1,5 +1,5 @@
 /* =====================================================
-   RESET
+   RESET & BASE STYLES
 ===================================================== */
 
 * {
@@ -15,7 +15,6 @@ html {
 body {
     min-height: 100vh;
     padding-bottom: 105px;
-
     background:
         radial-gradient(
             circle at 50% -10%,
@@ -23,9 +22,7 @@ body {
             transparent 36%
         ),
         #070707;
-
     color: #fff;
-
     font-family:
         Inter,
         -apple-system,
@@ -54,7 +51,6 @@ a {
     color: inherit;
 }
 
-
 /* =====================================================
    VARIABLES
 ===================================================== */
@@ -72,7 +68,6 @@ a {
     --green: #20d66b;
 }
 
-
 /* =====================================================
    CONTAINER
 ===================================================== */
@@ -81,7 +76,6 @@ a {
     width: min(650px, 92%);
     margin: auto;
 }
-
 
 /* =====================================================
    HEADER
@@ -105,11 +99,6 @@ a {
     justify-content: space-between;
 }
 
-
-/* =====================================================
-   BRAND
-===================================================== */
-
 .brand {
     font-size: 19px;
     font-weight: 950;
@@ -119,11 +108,6 @@ a {
 .brand span {
     color: var(--orange);
 }
-
-
-/* =====================================================
-   ONLINE STATUS
-===================================================== */
 
 .online {
     display: flex;
@@ -143,18 +127,17 @@ a {
     box-shadow: 0 0 12px var(--green);
 }
 
-
 /* =====================================================
-   PAGE SYSTEM
+   PAGE SYSTEM (FIXED OVERLAPPING BUG HERE)
 ===================================================== */
 
 .page {
-    display: none;
-    animation: pageIn 0.28s ease;
+    display: none !important;
 }
 
 .page.active {
-    display: block;
+    display: block !important;
+    animation: pageIn 0.28s ease;
 }
 
 @keyframes pageIn {
@@ -168,9 +151,8 @@ a {
     }
 }
 
-
 /* =====================================================
-   HOME TITLE
+   HOME PAGE ELEMENTS
 ===================================================== */
 
 .home-title {
@@ -202,11 +184,6 @@ a {
     font-size: 11px;
     line-height: 1.7;
 }
-
-
-/* =====================================================
-   HERO
-===================================================== */
 
 .hero {
     position: relative;
@@ -265,11 +242,6 @@ a {
     line-height: 1.5;
 }
 
-
-/* =====================================================
-   QUICK ACTIONS
-===================================================== */
-
 .quick-actions {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -321,11 +293,6 @@ a {
     font-size: 9px;
 }
 
-
-/* =====================================================
-   USER CARD
-===================================================== */
-
 .user-card {
     margin-top: 12px;
     padding: 14px 16px;
@@ -373,9 +340,8 @@ a {
     background: rgba(255, 105, 0, 0.15);
 }
 
-
 /* =====================================================
-   PAGE HEADER
+   INNER PAGES & FORMS
 ===================================================== */
 
 .page-header {
@@ -402,11 +368,6 @@ a {
     font-size: 11px;
     line-height: 1.65;
 }
-
-
-/* =====================================================
-   FORM CARD
-===================================================== */
 
 .form-card {
     padding: 21px;
@@ -447,21 +408,6 @@ a {
     border-color: var(--orange);
     box-shadow: 0 0 0 3px rgba(255, 105, 0, 0.07);
 }
-
-.form-card input[type="number"] {
-    appearance: textfield;
-    -moz-appearance: textfield;
-}
-
-.form-card input[type="number"]::-webkit-inner-spin-button,
-.form-card input[type="number"]::-webkit-outer-spin-button {
-    opacity: 0.5;
-}
-
-
-/* =====================================================
-   UPLOAD BOX
-===================================================== */
 
 .upload-box {
     position: relative;
@@ -524,6 +470,337 @@ a {
     width: 100%;
     max-height: 190px;
     object-fit: contain;
+    border-radius: 12px;
+}
+
+.submit-btn {
+    width: 100%;
+    height: 52px;
+    border: 0;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--orange), var(--orange2));
+    color: #090909;
+    font-size: 11px;
+    font-weight: 950;
+    letter-spacing: 0.2px;
+    box-shadow: 0 10px 30px rgba(255, 105, 0, 0.18);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.submit-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 35px rgba(255, 105, 0, 0.25);
+}
+
+.withdraw-info {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    margin-bottom: 17px;
+    border-radius: 16px;
+    background: rgba(255, 105, 0, 0.05);
+    border: 1px solid rgba(255, 105, 0, 0.12);
+}
+
+.withdraw-info-icon {
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: rgba(255, 105, 0, 0.10);
+    color: var(--orange);
+    font-size: 17px;
+    font-weight: 950;
+}
+
+.withdraw-info h4 {
+    font-size: 11px;
+}
+
+.withdraw-info p {
+    margin-top: 4px;
+    color: #696b70;
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+/* =====================================================
+   SETTINGS
+===================================================== */
+
+.settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.setting-item {
+    width: 100%;
+    padding: 17px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: #fff;
+    text-align: left;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 17px;
+}
+
+.setting-item.action {
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.setting-item.action:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 105, 0, 0.25);
+}
+
+.setting-icon {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 13px;
+    background: var(--card2);
+    color: var(--orange);
+    font-size: 17px;
+}
+
+.setting-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.setting-info h3 {
+    font-size: 12px;
+}
+
+.setting-info p {
+    margin-top: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #62656a;
+    font-size: 9px;
+}
+
+.setting-arrow {
+    color: #555;
+    font-size: 16px;
+}
+
+.notice {
+    margin-top: 18px;
+    padding: 15px;
+    text-align: center;
+    color: #555;
+    font-size: 8px;
+    line-height: 1.6;
+}
+
+/* =====================================================
+   WHATSAPP & NAVIGATION & TOAST
+===================================================== */
+
+.whatsapp {
+    position: fixed;
+    right: 18px;
+    bottom: 98px;
+    z-index: 998;
+    width: 50px;
+    height: 50px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--green);
+    color: #06150b;
+    font-size: 22px;
+    font-weight: 900;
+    box-shadow: 0 10px 30px rgba(32, 214, 107, 0.25);
+}
+
+.bottom-nav {
+    position: fixed;
+    left: 50%;
+    bottom: 11px;
+    transform: translateX(-50%);
+    width: min(500px, 94%);
+    height: 70px;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    background: rgba(17, 17, 17, 0.95);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 23px;
+    box-shadow: 0 20px 70px rgba(0, 0, 0, 0.65);
+    z-index: 9999;
+}
+
+.nav-btn {
+    position: relative;
+    width: 25%;
+    height: 58px;
+    border: 0;
+    background: transparent;
+    color: #5d6065;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    border-radius: 17px;
+}
+
+.nav-symbol {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.nav-btn > span:last-child {
+    font-size: 8px;
+    font-weight: 900;
+}
+
+.nav-btn.active {
+    color: var(--orange);
+    background: rgba(255, 105, 0, 0.09);
+}
+
+.nav-btn.active::after {
+    content: "";
+    position: absolute;
+    bottom: 4px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--orange);
+    box-shadow: 0 0 10px var(--orange);
+}
+
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 92px;
+    transform: translate(-50%, 20px);
+    z-index: 10000;
+    min-width: 220px;
+    max-width: 90%;
+    padding: 13px 18px;
+    text-align: center;
+    background: #202020;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    color: #fff;
+    font-size: 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+/* =====================================================
+   LOGIN PAGE STYLES
+===================================================== */
+
+.login-page {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 20px;
+}
+
+.login-card {
+    width: min(420px, 94%);
+    padding: 32px;
+    text-align: center;
+    background: linear-gradient(145deg, #151515, #0d0d0d);
+    border: 1px solid #292929;
+    border-radius: 26px;
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.7);
+}
+
+.login-logo {
+    font-size: 24px;
+    font-weight: 950;
+    letter-spacing: 0.5px;
+}
+
+.login-logo span {
+    color: var(--orange);
+}
+
+.login-label {
+    display: block;
+    margin-top: 10px;
+    color: var(--orange);
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 1.5px;
+}
+
+.login-card h1 {
+    margin-top: 18px;
+    font-size: 28px;
+    font-weight: 900;
+}
+
+.login-text {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+.google-btn {
+    width: 100%;
+    height: 52px;
+    margin-top: 22px;
+    border: 0;
+    border-radius: 14px;
+    background: #ffffff;
+    color: #111;
+    font-size: 12px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.google-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+    border-radius: 50%;
+    background: #f1f1f1;
+    color: #111;
+    font-weight: 900;
+}
+
+.login-note {
+    margin-top: 18px;
+    color: #555;
+    font-size: 8px;
+    line-height: 1.5;
+}
+bject-fit: contain;
     border-radius: 12px;
 }
 

@@ -117,8 +117,17 @@ function setLanguage(lang) {
     document.getElementById("withdrawWhatsapp").placeholder = t.phWhatsapp;
     document.getElementById("withdrawDetails").placeholder = t.phDetails;
 
-    const langSelect = document.getElementById("languageSelect");
-    if (langSelect) langSelect.value = lang;
+    // Custom UI selection update
+    document.querySelectorAll(".lang-option-card").forEach(card => {
+        const input = card.querySelector("input");
+        if (card.dataset.lang === lang) {
+            card.classList.add("active");
+            if (input) input.checked = true;
+        } else {
+            card.classList.remove("active");
+            if (input) input.checked = false;
+        }
+    });
 }
 
 function showToast(message) {
@@ -159,10 +168,13 @@ document.addEventListener("DOMContentLoaded", () => {
     setLanguage(currentLang);
     renderUserInfo(null);
 
-    const langSelect = document.getElementById("languageSelect");
-    if (langSelect) {
-        langSelect.addEventListener("change", (e) => setLanguage(e.target.value));
-    }
+    // Language selection card click event
+    document.querySelectorAll(".lang-option-card").forEach(card => {
+        card.addEventListener("click", () => {
+            const selectedLang = card.getAttribute("data-lang");
+            setLanguage(selectedLang);
+        });
+    });
 
     document.querySelectorAll("[data-page]").forEach(btn => {
         btn.addEventListener("click", (e) => {

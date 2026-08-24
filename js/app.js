@@ -6,7 +6,6 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstati
 const db = getFirestore();
 const storage = getStorage();
 
-// Make Logout available globally
 window.firebaseLogout = firebaseLogout;
 
 /* PAGE NAVIGATION */
@@ -33,12 +32,13 @@ window.toggleSetting = function (button) {
     button.classList.toggle("on");
 };
 
-/* UI UPDATE */
+/* USER DATA UI UPDATE FIX */
 function updateUI(user) {
     const nameEl = document.getElementById("userName");
     const emailEl = document.getElementById("userEmail");
     const settingsEmailEl = document.getElementById("settingsEmail");
 
+    // Get data from Firebase User Object OR LocalStorage fallback
     const name = user?.displayName || localStorage.getItem("userName") || "Agent User";
     const email = user?.email || localStorage.getItem("userEmail") || "No email available";
 
@@ -49,14 +49,10 @@ function updateUI(user) {
 
 /* INITIALIZATION & LISTENERS */
 document.addEventListener("DOMContentLoaded", () => {
-    // Immediate render from localStorage
-    const cachedName = localStorage.getItem("userName");
-    const cachedEmail = localStorage.getItem("userEmail");
-    if (cachedName || cachedEmail) {
-        updateUI({ displayName: cachedName, email: cachedEmail });
-    }
+    // 1. Page Load වූ සැණින් LocalStorage data පෙන්වන්න (Loading... වෙනුවට)
+    updateUI(null);
 
-    // Slider logic
+    // 2. Image Slider Logic
     const slides = document.querySelectorAll(".slide");
     const dots = document.querySelectorAll(".slider-dot");
     let currentSlide = 0;
@@ -73,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 4000);
     }
 
-    // Receipt Image Preview
+    // 3. Receipt Image Preview Setup
     const receiptInput = document.getElementById("receipt");
     if (receiptInput) {
         receiptInput.addEventListener("change", function () {
@@ -100,14 +96,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-/* AUTH CHECK */
+/* AUTH STATE LISTENER (Firebase Sync) */
 onAuthStateChanged(auth, (user) => {
     if (user) {
+        // User logged in නම් LocalStorage update කර UI එක refresh කරන්න
+        localStorage.setItem("firebaseLoggedIn", "true");
+        localStorage.setItem("userName", user.displayName || "Agent User");
+        localStorage.setItem("userEmail", user.email || "");
         updateUI(user);
     } else {
+        // User Login වී නැත්නම් Redirect කරන්න
         const cachedLoggedIn = localStorage.getItem("firebaseLoggedIn");
         if (!cachedLoggedIn) {
             window.location.href = "login.html";
+        } else {
+            updateUI(null);
         }
     }
 });
@@ -127,7 +130,7 @@ function showToast(message) {
     }, 2800);
 }
 
-/* DEPOSIT SUBMIT (FIRESTORE & STORAGE) */
+/* DEPOSIT SUBMIT */
 window.submitDeposit = async function () {
     const user = auth.currentUser;
     const amount = document.getElementById("depositAmount").value.trim();
@@ -179,7 +182,7 @@ window.submitDeposit = async function () {
     }
 };
 
-/* WITHDRAWAL SUBMIT (FIRESTORE) */
+/* WITHDRAWAL SUBMIT */
 window.submitWithdrawal = async function () {
     const user = auth.currentUser;
     const name = document.getElementById("withdrawName").value.trim();

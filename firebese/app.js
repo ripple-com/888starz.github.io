@@ -6,13 +6,17 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstati
 const db = getFirestore();
 const storage = getStorage();
 
-/* AUTH CHECK */
-onAuthStateChanged(auth, (user) => {
-    if (user) {
-        const nameEl = document.getElementById("userName");
-        const emailEl = document.getElementById("userEmail");
-        const settingsEmailEl = document.getElementById("settingsEmail");
+// Make Logout global
+window.firebaseLogout = firebaseLogout;
 
+/* AUTH CHECK & USER DATA DISPLAY */
+onAuthStateChanged(auth, (user) => {
+    const nameEl = document.getElementById("userName");
+    const emailEl = document.getElementById("userEmail");
+    const settingsEmailEl = document.getElementById("settingsEmail");
+
+    if (user) {
+        // Firebase Auth එකෙන් හෝ LocalStorage එකෙන් Data ලබා ගැනීම
         const displayName = user.displayName || localStorage.getItem("userName") || user.email.split('@')[0];
         const displayEmail = user.email || localStorage.getItem("userEmail") || "";
 
@@ -20,7 +24,15 @@ onAuthStateChanged(auth, (user) => {
         if (emailEl) emailEl.textContent = displayEmail;
         if (settingsEmailEl) settingsEmailEl.textContent = displayEmail;
     } else {
-        if (window.location.pathname.includes("index.html") || window.location.pathname === "/") {
+        // LocalStorage එකේ backup තියෙනවා නම් ඒක පෙන්නන්න, නැත්නම් Login එකට යවන්න
+        const cachedName = localStorage.getItem("userName");
+        const cachedEmail = localStorage.getItem("userEmail");
+
+        if (cachedName && cachedEmail) {
+            if (nameEl) nameEl.textContent = cachedName;
+            if (emailEl) emailEl.textContent = cachedEmail;
+            if (settingsEmailEl) settingsEmailEl.textContent = cachedEmail;
+        } else {
             window.location.href = "login.html";
         }
     }
@@ -61,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const receiptInput = document.getElementById("receipt");
     if (receiptInput) {
         receiptInput.addEventListener("change", e => {
-            const file = e.target.files[0];
+...        const file = e.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
@@ -82,11 +94,6 @@ document.addEventListener("DOMContentLoaded", () => {
 /* SUBMIT DEPOSIT */
 window.submitDeposit = async function () {
     const user = auth.currentUser;
-    if (!user) {
-        alert("Please login first.");
-        return;
-    }
-
     const amount = document.getElementById("depositAmount").value.trim();
     const name = document.getElementById("depositName").value.trim();
     const gameId = document.getElementById("gameId").value.trim();
@@ -104,13 +111,13 @@ window.submitDeposit = async function () {
         btn.disabled = true;
         btn.textContent = "SUBMITTING...";
 
-        const fileRef = ref(storage, `receipts/${user.uid}/${Date.now()}_${file.name}`);
+        const userId = user ? user.uid : "guest";
+        const fileRef = ref(storage, `receipts/${userId}/${Date.now()}_${file.name}`);
         await uploadBytes(fileRef, file);
         const receiptURL = await getDownloadURL(fileRef);
 
         await addDoc(collection(db, "depositRequests"), {
-            userId: user.uid,
-            name, gameId, whatsapp,
+            userId, name, gameId, whatsapp,
             amount: Number(amount),
             receiptURL,
             status: "pending",
@@ -131,11 +138,6 @@ window.submitDeposit = async function () {
 /* SUBMIT WITHDRAWAL */
 window.submitWithdrawal = async function () {
     const user = auth.currentUser;
-    if (!user) {
-        alert("Please login first.");
-        return;
-    }
-
     const name = document.getElementById("withdrawName").value.trim();
     const gameId = document.getElementById("withdrawGameId").value.trim();
     const amount = document.getElementById("withdrawAmount").value.trim();
@@ -152,9 +154,9 @@ window.submitWithdrawal = async function () {
         btn.disabled = true;
         btn.textContent = "SUBMITTING...";
 
+        const userId = user ? user.uid : "guest";
         await addDoc(collection(db, "withdrawalRequests"), {
-            userId: user.uid,
-            name, gameId, amount: Number(amount), whatsapp,
+            userId, name, gameId, amount: Number(amount), whatsapp,
             paymentDetails: details,
             status: "pending",
             createdAt: serverTimestamp()

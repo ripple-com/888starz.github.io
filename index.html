@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="888STARZ independent agent deposit and withdrawal dashboard">
-    <title>888STARZ Agent | Deposit & Withdrawal</title>
+    <title>888STARZ Agent | Dashboard</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -13,13 +12,8 @@
 <!-- HEADER -->
 <header class="header">
     <div class="container header-inner">
-        <div class="brand">
-            888<span>STARZ</span> AGENT
-        </div>
-        <div class="online">
-            <i></i>
-            ONLINE 24/7
-        </div>
+        <div class="brand">888<span>STARZ</span> AGENT</div>
+        <div class="online"><i></i> ONLINE 24/7</div>
     </div>
 </header>
 
@@ -28,17 +22,12 @@
 <!-- HOME PAGE -->
 <section id="homePage" class="page active">
     <div class="container">
-
         <div class="home-title">
             <small>INDEPENDENT AGENT SERVICE</small>
             <h1>Fast Deposit<br><span>&amp; Withdrawal</span></h1>
-            <p>
-                888STARZ customers සඳහා deposit සහ withdrawal assistance.
-                Transaction එකකට පෙර agent සමඟ payment details verify කරන්න.
-            </p>
+            <p>888STARZ customers සඳහා deposit සහ withdrawal assistance.</p>
         </div>
 
-        <!-- HERO -->
         <div class="hero">
             <div class="hero-content">
                 <small>FAST &amp; EASY SERVICE</small>
@@ -47,7 +36,6 @@
             </div>
         </div>
 
-        <!-- QUICK ACTIONS -->
         <div class="quick-actions">
             <button type="button" class="quick-card" onclick="showPage('deposit')">
                 <div class="quick-icon">↑</div>
@@ -62,7 +50,6 @@
             </button>
         </div>
 
-        <!-- USER CARD -->
         <div class="user-card">
             <div>
                 <strong id="userName">Loading...</strong>
@@ -74,106 +61,80 @@
         <div class="notice">
             This is an independent agent service and is not the official 888STARZ website.
         </div>
-
     </div>
 </section>
 
 <!-- DEPOSIT PAGE -->
 <section id="depositPage" class="page">
     <div class="container">
-
         <div class="page-header">
             <small>DEPOSIT</small>
             <h1>Deposit Request</h1>
-            <p>Payment receipt එක upload කරලා පහත details සම්පූර්ණ කරන්න.</p>
         </div>
 
         <div class="form-card">
             <label>PAYMENT RECEIPT</label>
             <div class="upload-box">
-                <img id="receiptPreview" class="receipt-preview" alt="Payment receipt preview">
+                <img id="receiptPreview" class="receipt-preview" alt="Preview">
                 <div id="uploadContent">
                     <div class="upload-icon">↑</div>
                     <strong>Upload Receipt</strong>
-                    <span>JPG / PNG / WEBP — Max 5MB</span>
                 </div>
-                <input type="file" id="receipt" accept="image/jpeg,image/png,image/webp">
+                <input type="file" id="receipt" accept="image/*">
             </div>
 
             <label>DEPOSIT AMOUNT</label>
-            <input type="number" id="depositAmount" min="1" inputmode="decimal" placeholder="Enter deposit amount">
+            <input type="number" id="depositAmount" placeholder="Enter amount">
 
             <label>NAME</label>
-            <input type="text" id="depositName" maxlength="100" autocomplete="name" placeholder="Enter your name">
+            <input type="text" id="depositName" placeholder="Enter name">
 
             <label>GAME ID</label>
-            <input type="text" id="gameId" maxlength="80" placeholder="Enter your Game ID">
+            <input type="text" id="gameId" placeholder="Enter Game ID">
 
             <label>WHATSAPP NUMBER</label>
-            <input type="tel" id="depositWhatsapp" maxlength="30" autocomplete="tel" placeholder="Enter WhatsApp number">
+            <input type="tel" id="depositWhatsapp" placeholder="Enter WhatsApp number">
 
-            <button type="button" class="submit-btn" id="depositSubmitBtn" onclick="submitDeposit()">
-                SUBMIT DEPOSIT REQUEST
-            </button>
+            <button type="button" class="submit-btn" id="depositSubmitBtn" onclick="submitDeposit()">SUBMIT DEPOSIT</button>
         </div>
-
-        <div class="notice">
-            Please verify payment account details with the agent before making a payment.
-        </div>
-
     </div>
 </section>
 
 <!-- WITHDRAWAL PAGE -->
 <section id="withdrawPage" class="page">
     <div class="container">
-
         <div class="page-header">
             <small>WITHDRAWAL</small>
             <h1>Withdrawal Request</h1>
-            <p>Withdrawal request එක සඳහා ඔබගේ details ඇතුළත් කරන්න.</p>
-        </div>
-
-        <div class="withdraw-info">
-            <div class="withdraw-info-icon">!</div>
-            <div>
-                <h4>Important</h4>
-                <p>Withdrawal details submit කිරීමට පෙර සියලුම තොරතුරු නිවැරදි බව තහවුරු කරන්න.</p>
-            </div>
         </div>
 
         <div class="form-card">
             <label>NAME</label>
-            <input type="text" id="withdrawName" maxlength="100" autocomplete="name" placeholder="Enter your name">
+            <input type="text" id="withdrawName" placeholder="Enter name">
 
             <label>GAME ID</label>
-            <input type="text" id="withdrawGameId" maxlength="80" placeholder="Enter your Game ID">
+            <input type="text" id="withdrawGameId" placeholder="Enter Game ID">
 
             <label>WITHDRAWAL AMOUNT</label>
-            <input type="number" id="withdrawAmount" min="1" inputmode="decimal" placeholder="Enter withdrawal amount">
+            <input type="number" id="withdrawAmount" placeholder="Enter amount">
 
             <label>WHATSAPP NUMBER</label>
-            <input type="tel" id="withdrawWhatsapp" maxlength="30" autocomplete="tel" placeholder="Enter WhatsApp number">
+            <input type="tel" id="withdrawWhatsapp" placeholder="Enter WhatsApp number">
 
-            <label>PAYMENT / BANK DETAILS</label>
-            <input type="text" id="withdrawDetails" maxlength="250" placeholder="Enter payment details">
+            <label>PAYMENT DETAILS</label>
+            <input type="text" id="withdrawDetails" placeholder="Bank / Account details">
 
-            <button type="button" class="submit-btn" id="withdrawSubmitBtn" onclick="submitWithdrawal()">
-                SUBMIT WITHDRAWAL REQUEST
-            </button>
+            <button type="button" class="submit-btn" id="withdrawSubmitBtn" onclick="submitWithdrawal()">SUBMIT WITHDRAWAL</button>
         </div>
-
     </div>
 </section>
 
 <!-- SETTINGS PAGE -->
 <section id="settingsPage" class="page">
     <div class="container">
-
         <div class="page-header">
             <small>SETTINGS</small>
             <h1>Settings</h1>
-            <p>Account සහ support options.</p>
         </div>
 
         <div class="settings-list">
@@ -191,7 +152,6 @@
                     <h3>Agent Support</h3>
                     <p>Contact WhatsApp support</p>
                 </div>
-                <div class="setting-arrow">→</div>
             </button>
 
             <button type="button" class="setting-item action" onclick="logout()">
@@ -200,26 +160,16 @@
                     <h3>Logout</h3>
                     <p>Sign out from this device</p>
                 </div>
-                <div class="setting-arrow">→</div>
             </button>
         </div>
-
-        <div class="notice">
-            Independent Agent Service. This page is not the official 888STARZ website.
-        </div>
-
     </div>
 </section>
 
 </main>
 
-<!-- WHATSAPP BUTTON -->
-<a href="https://wa.me/94702883324" class="whatsapp" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp Support">
-    ☎
-</a>
+<a href="https://wa.me/94702883324" class="whatsapp" target="_blank">☎</a>
 
-<!-- BOTTOM NAVIGATION -->
-<nav class="bottom-nav" aria-label="Main navigation">
+<nav class="bottom-nav">
     <button type="button" class="nav-btn active" data-page="home" onclick="showPage('home')">
         <span class="nav-symbol">⌂</span>
         <span>Home</span>
@@ -238,122 +188,12 @@
     </button>
 </nav>
 
-<!-- TOAST -->
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="toast" class="toast"></div>
 
-<!-- JS ENTRY -->
 <script type="module" src="js/app.js"></script>
-
 </body>
 </html>
-3>
-                        Logout
-                    </h3>
-
-                    <p>
-                        Sign out from this device
-                    </p>
-
-                </div>
-
-                <div class="setting-arrow">
-                    →
-                </div>
-
-            </button>
-
-
-        </div>
-
-
-        <div class="notice">
-
-            Independent Agent Service.
-            This page is not the official 888STARZ website.
-
-        </div>
-
-    </div>
-
-</section>
-
-
-</main>
-
-
-
-<!-- =====================================================
-     WHATSAPP FLOATING BUTTON
-===================================================== -->
-
-<a
-    href="https://wa.me/94702883324"
-    class="whatsapp"
-    target="_blank"
-    rel="noopener noreferrer"
-    aria-label="WhatsApp Support"
->
-    ☎
-</a>
-
-
-
-<!-- =====================================================
-     BOTTOM NAVIGATION
-===================================================== -->
-
-<nav
-    class="bottom-nav"
-    aria-label="Main navigation"
->
-
-
-    <!-- HOME -->
-
-    <button
-        type="button"
-        class="nav-btn active"
-        data-page="home"
-        onclick="showPage('home')"
-    >
-
-        <span class="nav-symbol">
-            ⌂
-        </span>
-
-        <span>
-            Home
-        </span>
-
-    </button>
-
-
-
-    <!-- DEPOSIT -->
-
-    <button
-        type="button"
-        class="nav-btn"
-        data-page="deposit"
-        onclick="showPage('deposit')"
-    >
-
-        <span class="nav-symbol">
-            ↑
-        </span>
-
-        <span>
-            Deposit
-        </span>
-
-    </button>
-
-
-
-    <!-- WITHDRAWAL -->
-
-    <button
-        type="button"
+type="button"
         class="nav-btn"
         data-page="withdraw"
         onclick="showPage('withdraw')"

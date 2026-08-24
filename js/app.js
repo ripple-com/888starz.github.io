@@ -318,7 +318,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const userId = user ? user.uid : "guest";
                 
-                // 1. Storage Upload
+                // 1. Firebase Storage Upload
                 const fileRef = ref(storage, `receipts/${userId}/${Date.now()}_${file.name}`);
                 await uploadBytes(fileRef, file);
                 const receiptURL = await getDownloadURL(fileRef);
@@ -328,32 +328,39 @@ document.addEventListener("DOMContentLoaded", () => {
                     userId, name, gameId, whatsapp, amount: Number(amount), receiptURL, status: "pending", createdAt: serverTimestamp()
                 });
 
-                // 3. Telegram Message Send
-                const caption = `📌 *NEW DEPOSIT REQUEST*\n\n` +
-                                `👤 *Name:* ${name}\n` +
-                                `🎮 *Game ID:* ${gameId}\n` +
-                                `💰 *Amount:* LKR ${amount}\n` +
-                                `📱 *WhatsApp:* ${whatsapp}\n` +
-                                `🆔 *User ID:* ${userId}\n` +
-                                `⏰ *Time:* ${new Date().toLocaleString()}`;
+                // 3. Telegram Message (sendMessage භාවිතා කර ඇත)
+                const textMessage = `📌 *NEW DEPOSIT REQUEST*\n\n` +
+                                    `👤 *Name:* ${name}\n` +
+                                    `🎮 *Game ID:* ${gameId}\n` +
+                                    `💰 *Amount:* LKR ${amount}\n` +
+                                    `📱 *WhatsApp:* ${whatsapp}\n` +
+                                    `🆔 *User ID:* ${userId}\n` +
+                                    `⏰ *Time:* ${new Date().toLocaleString()}\n\n` +
+                                    `🧾 *Receipt Link:* ${receiptURL}`;
 
-                const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
+                const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
                 
-                await fetch(telegramUrl, {
+                const response = await fetch(telegramUrl, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
                         chat_id: TELEGRAM_CHAT_ID,
-                        photo: receiptURL,
-                        caption: caption,
+                        text: textMessage,
                         parse_mode: "Markdown"
                     })
                 });
 
+                const resData = await response.json();
+
+                if (!resData.ok) {
+                    console.error("Telegram Error Response:", resData);
+                    throw new Error(resData.description || "Telegram notification failed");
+                }
+
                 showToast(t.msgDepSuccess);
                 showPage("home");
 
-                // Reset Fields
+                // Form Reset
                 document.getElementById("depositAmount").value = "";
                 document.getElementById("depositName").value = "";
                 document.getElementById("gameId").value = "";
@@ -363,7 +370,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("uploadContent").style.display = "flex";
 
             } catch (err) {
-                console.error(err);
+                console.error("Error submitting deposit:", err);
                 showToast("Error: " + err.message);
             } finally {
                 depositSubmitBtn.disabled = false;
@@ -372,6 +379,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // WITHDRAW SUBMIT WITH TELEGRAM BOT INTEGRATION
     const withdrawSubmitBtn = document.getElementById("withdrawSubmitBtn");
     if (withdrawSubmitBtn) {
         withdrawSubmitBtn.addEventListener("click", async () => {
@@ -393,13 +401,46 @@ document.addEventListener("DOMContentLoaded", () => {
                 withdrawSubmitBtn.textContent = "...";
 
                 const userId = user ? user.uid : "guest";
+
+                // 1. Firestore Save
                 await addDoc(collection(db, "withdrawalRequests"), {
                     userId, name, gameId, amount: Number(amount), whatsapp, paymentDetails: details, status: "pending", createdAt: serverTimestamp()
                 });
 
+                // 2. Telegram Notification
+                const textMessage = `🔻 *NEW WITHDRAWAL REQUEST*\n\n` +
+                                    `👤 *Name:* ${name}\n` +
+                                    `🎮 *Game ID:* ${gameId}\n` +
+                                    `💰 *Amount:* LKR ${amount}\n` +
+                                    `📱 *WhatsApp:* ${whatsapp}\n` +
+                                    `🏦 *Bank/Payment Details:* ${details}\n` +
+                                    `🆔 *User ID:* ${userId}\n` +
+                                    `⏰ *Time:* ${new Date().toLocaleString()}`;
+
+                const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+
+                await fetch(telegramUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        chat_id: TELEGRAM_CHAT_ID,
+                        text: textMessage,
+                        parse_mode: "Markdown"
+                    })
+                });
+
                 showToast(t.msgWSuccess);
                 showPage("home");
+
+                // Form Reset
+                document.getElementById("withdrawName").value = "";
+                document.getElementById("withdrawGameId").value = "";
+                document.getElementById("withdrawAmount").value = "";
+                document.getElementById("withdrawWhatsapp").value = "";
+                document.getElementById("withdrawDetails").value = "";
+
             } catch (err) {
+                console.error("Error submitting withdrawal:", err);
                 showToast("Error: " + err.message);
             } finally {
                 withdrawSubmitBtn.disabled = false;

@@ -6,10 +6,6 @@
     <title>888STARZ Agent | Login</title>
     <link rel="stylesheet" href="css/style.css">
     
-    <!-- Firebase Compatibility SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-    
     <style>
         .login-wrapper {
             min-height: 100vh;
@@ -71,7 +67,7 @@
         <h1>Welcome Back</h1>
         <p>Sign in to continue to your agent dashboard.</p>
 
-        <button type="button" class="google-btn" onclick="loginWithGoogle()">
+        <button type="button" class="google-btn" onclick="googleLogin()">
             <svg viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -81,48 +77,12 @@
             Continue with Google
         </button>
 
-        <div class="notice" style="margin-top: 25px;">
+        <div class="notice" style="margin-top: 25px; color: #555; font-size: 8px;">
             By continuing, you agree to use this service responsibly.
         </div>
     </div>
 </div>
 
-<script>
-    // FIREBASE CONFIGURATION (මෙතැනට ඔබගේ Firebase Keys දමන්න)
-    const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT_ID.appspot.com",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId: "YOUR_APP_ID"
-    };
-
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-    const auth = firebase.auth();
-
-    // REDIRECT IF ALREADY LOGGED IN
-    auth.onAuthStateChanged(user => {
-        if (user) {
-            window.location.href = "index.html";
-        }
-    });
-
-    // GOOGLE LOGIN FUNCTION
-    function loginWithGoogle() {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth.signInWithPopup(provider)
-            .then((result) => {
-                window.location.href = "index.html";
-            })
-            .catch((error) => {
-                console.error("Login error:", error);
-                alert("Login failed: " + error.message);
-            });
-    }
-</script>
-
+<script type="module" src="js/firebase.js"></script>
 </body>
 </html>

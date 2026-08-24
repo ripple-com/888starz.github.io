@@ -4,8 +4,8 @@ import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.g
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
 
 // TELEGRAM BOT CONFIGURATION
-const TELEGRAM_BOT_TOKEN = "8842393659:AAEK-X-hY4C_KjEtMfUCjMXWQWq_XcjbwfQ"; // මෙතනට ඔයාගේ Bot Token එක දාන්න
-const TELEGRAM_CHAT_ID = "7135887501";     // මෙතනට Chat ID එක හෝ Group ID එක දාන්න
+const TELEGRAM_BOT_TOKEN = "8842393659:AAEK-X-hY4C_KjEtMfUCjMXWQWq_XcjbwfQ"; 
+const TELEGRAM_CHAT_ID = "7135887501";     
 
 const firebaseConfig = {
     apiKey: "AIzaSyCdLAlDB0GK6_GhvpgFLnjmwO_VRbvRIms",
@@ -329,28 +329,26 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
 
                 // 3. Telegram Message Send
-                if (TELEGRAM_BOT_TOKEN !== "YOUR_TELEGRAM_BOT_TOKEN") {
-                    const caption = `📌 *NEW DEPOSIT REQUEST*\n\n` +
-                                    `👤 *Name:* ${name}\n` +
-                                    `🎮 *Game ID:* ${gameId}\n` +
-                                    `💰 *Amount:* LKR ${amount}\n` +
-                                    `📱 *WhatsApp:* ${whatsapp}\n` +
-                                    `🆔 *User ID:* ${userId}\n` +
-                                    `⏰ *Time:* ${new Date().toLocaleString()}`;
+                const caption = `📌 *NEW DEPOSIT REQUEST*\n\n` +
+                                `👤 *Name:* ${name}\n` +
+                                `🎮 *Game ID:* ${gameId}\n` +
+                                `💰 *Amount:* LKR ${amount}\n` +
+                                `📱 *WhatsApp:* ${whatsapp}\n` +
+                                `🆔 *User ID:* ${userId}\n` +
+                                `⏰ *Time:* ${new Date().toLocaleString()}`;
 
-                    const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
-                    
-                    await fetch(telegramUrl, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            chat_id: TELEGRAM_CHAT_ID,
-                            photo: receiptURL,
-                            caption: caption,
-                            parse_mode: "Markdown"
-                        })
-                    });
-                }
+                const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
+                
+                await fetch(telegramUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        chat_id: TELEGRAM_CHAT_ID,
+                        photo: receiptURL,
+                        caption: caption,
+                        parse_mode: "Markdown"
+                    })
+                });
 
                 showToast(t.msgDepSuccess);
                 showPage("home");

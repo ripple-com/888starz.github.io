@@ -90,17 +90,79 @@ button{ cursor:pointer; }
 .setting-icon{ width:42px; height:42px; flex-shrink:0; display:grid; place-items:center; border-radius:13px; background:var(--card2); color:var(--orange); }
 .setting-icon svg{ width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.8; }
 .setting-info{ flex:1; }
+
+/* CUSTOM LANGUAGE UI */
+.lang-setting-card {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 14px;
+}
+.setting-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+.lang-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 5px;
+}
+.lang-option-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #090909;
+    border: 1px solid rgba(255, 255, 255, .08);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.lang-option-card input {
+    display: none;
+}
+.lang-option-card span {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ccc;
+}
+.radio-check {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid #555;
+    position: relative;
+    transition: 0.2s;
+}
+.lang-option-card.active {
+    border-color: var(--orange);
+    background: rgba(255, 105, 0, 0.06);
+}
+.lang-option-card.active span {
+    color: #fff;
+}
+.lang-option-card.active .radio-check {
+    border-color: var(--orange);
+}
+.lang-option-card.active .radio-check::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    background: var(--orange);
+    border-radius: 50%;
+}
+
 .toggle{ width:42px; height:23px; padding:3px; border:0; border-radius:20px; background:#303030; }
 .toggle::after{ content:""; display:block; width:17px; height:17px; border-radius:50%; background:#888; transition:.25s; }
 .toggle.on{ background:var(--orange); }
 .toggle.on::after{ transform:translateX(19px); background:#111; }
-.lang-select{ width:120px; height:40px; background:#090909; color:#fff; border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:0 8px; font-size:11px; font-weight:700; cursor:pointer; }
 .notice{ margin-top:18px; text-align:center; color:#555; font-size:9px; line-height:1.6; }
 
 .whatsapp{ position:fixed; right:18px; bottom:98px; z-index:998; width:50px; height:50px; display:grid; place-items:center; border-radius:50%; background:#20d66b; color:#06150b; }
 .whatsapp svg{ width:23px; height:23px; stroke:currentColor; fill:none; stroke-width:1.8; }
 
-/* BOTTOM NAVIGATION WITH ICONS */
+/* BOTTOM NAVIGATION */
 .bottom-nav{ position:fixed; left:50%; bottom:11px; transform:translateX(-50%); width:min(500px,94%); height:70px; padding:6px; display:flex; align-items:center; justify-content:space-around; background:rgba(17,17,17,.95); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,.09); border-radius:23px; z-index:9999; }
 .nav-btn{ position:relative; width:25%; height:58px; border:0; background:transparent; color:#5d6065; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; border-radius:17px; }
 .nav-btn svg{ width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
@@ -238,17 +300,43 @@ button{ cursor:pointer; }
 
     <section id="settingsPage" class="page">
         <div class="container">
-            <div class="page-header"><small data-i18n="navSettings">SETTINGS</small><h1 data-i18n="titleSettings">Settings</h1></div>
+            <div class="page-header">
+                <small data-i18n="navSettings">SETTINGS</small>
+                <h1 data-i18n="titleSettings">Settings</h1>
+            </div>
             <div class="settings-list">
-                <div class="setting-item">
-                    <div class="setting-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
-                    <div class="setting-info"><h3 data-i18n="lblLanguage">Language</h3><p data-i18n="descLanguage">Select system language</p></div>
-                    <select id="languageSelect" class="lang-select">
-                        <option value="en">English</option>
-                        <option value="si">සිංහල</option>
-                        <option value="ta">தமிழ்</option>
-                    </select>
+                
+                <!-- CUSTOM LANGUAGE PICKER CARD -->
+                <div class="setting-item lang-setting-card">
+                    <div class="setting-head">
+                        <div class="setting-icon">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        </div>
+                        <div class="setting-info">
+                            <h3 data-i18n="lblLanguage">Language</h3>
+                            <p data-i18n="descLanguage">Select system language</p>
+                        </div>
+                    </div>
+
+                    <div class="lang-options">
+                        <label class="lang-option-card active" data-lang="en">
+                            <input type="radio" name="appLang" value="en" checked>
+                            <span>English</span>
+                            <div class="radio-check"></div>
+                        </label>
+                        <label class="lang-option-card" data-lang="si">
+                            <input type="radio" name="appLang" value="si">
+                            <span>සිංහල</span>
+                            <div class="radio-check"></div>
+                        </label>
+                        <label class="lang-option-card" data-lang="ta">
+                            <input type="radio" name="appLang" value="ta">
+                            <span>தமிழ்</span>
+                            <div class="radio-check"></div>
+                        </label>
+                    </div>
                 </div>
+
                 <div class="setting-item">
                     <div class="setting-icon"><svg viewBox="0 0 24 24"><path d="M18 8 a6 6 0 0 0-12 0 c0 7-3 7-3 9 h18 c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></div>
                     <div class="setting-info"><h3 data-i18n="lblNotif">Notifications</h3><p data-i18n="descNotif">Receive transaction updates</p></div>

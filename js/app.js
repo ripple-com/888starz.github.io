@@ -35,7 +35,8 @@ const translations = {
         withdrawTitle: "Withdrawal Request", withdrawDesc: "Enter your details for withdrawal processing.", txtImportant: "Important",
         txtWithdrawInfo: "Please double-check all details before submitting your withdrawal request.",
         lblWithdrawAmount: "WITHDRAWAL AMOUNT", lblBankDetails: "PAYMENT / BANK DETAILS", btnSubmitWithdraw: "SUBMIT WITHDRAWAL REQUEST",
-        titleSettings: "Settings", lblLanguage: "Language", descLanguage: "Select system language",
+        titleSettings: "Settings", lblTheme: "Dark Mode", descTheme: "Switch between Light and Dark mode",
+        lblLanguage: "Language", descLanguage: "Select system language",
         lblNotif: "Notifications", descNotif: "Receive transaction updates", lblSupport: "Agent Support", descSupport: "Contact WhatsApp support",
         navHome: "Home", navDeposit: "Deposit", navWithdraw: "Withdrawal", navSettings: "Setting",
         phAmount: "Enter deposit amount", phName: "Enter your name", phGameId: "Enter your Game ID", phWhatsapp: "Enter WhatsApp number",
@@ -58,7 +59,8 @@ const translations = {
         withdrawTitle: "මුදල් ලබාගැනීමේ ඉල්ලීම", withdrawDesc: "මුදල් ආපසු ගැනීම සඳහා ඔබගේ විස්තර ඇතුළත් කරන්න.", txtImportant: "වැදගත්",
         txtWithdrawInfo: "තොරතුරු යැවීමට පෙර සියලුම විස්තර නිවැරදි දැයි නැවත පරීක්ෂා කරන්න.",
         lblWithdrawAmount: "ලබාගන්නා මුදල", lblBankDetails: "ගෙවීම් / බැංකු විස්තර", btnSubmitWithdraw: "මුදල් ලබාගැනීමේ ඉල්ලීම යොමු කරන්න",
-        titleSettings: "සැකසුම් (Settings)", lblLanguage: "භාෂාව (Language)", descLanguage: "පද්ධති භාෂාව තෝරන්න",
+        titleSettings: "සැකසුම් (Settings)", lblTheme: "Dark Mode", descTheme: "Light සහ Dark තිම මාරු කරන්න",
+        lblLanguage: "භාෂාව (Language)", descLanguage: "පද්ධති භාෂාව තෝරන්න",
         lblNotif: "දැනුම්දීම්", descNotif: "ගනුදෙනු යාවත්කාලීන ලබාගන්න", lblSupport: "නියෝජිත සහාය", descSupport: "WhatsApp මගින් සම්බන්ධ වන්න",
         navHome: "මුල් පිටුව", navDeposit: "තැන්පතු", navWithdraw: "ලබාගැනීම්", navSettings: "සැකසුම්",
         phAmount: "තැන්පතු මුදල ඇතුළත් කරන්න", phName: "ඔබේ නම ඇතුළත් කරන්න", phGameId: "Game ID එක ඇතුළත් කරන්න", phWhatsapp: "WhatsApp අංකය ඇතුළත් කරන්න",
@@ -81,7 +83,8 @@ const translations = {
         withdrawTitle: "திரும்பப் பெறல் கோரிக்கை", withdrawDesc: "செயலாக்கத்திற்கு உங்கள் விவரங்களை உள்ளிடவும்.", txtImportant: "முக்கியமானது",
         txtWithdrawInfo: "சமர்ப்பிப்பதற்கு முன் அனைத்து விவரங்களையும் மீண்டும் சரிபார்க்கவும்.",
         lblWithdrawAmount: "திரும்பப் பெறும் தொகை", lblBankDetails: "வங்கி / கட்டண விவரங்கள்", btnSubmitWithdraw: "திரும்பப் பெறல் கோரிக்கையை சமர்ப்பிக்கவும்",
-        titleSettings: "அமைப்புகள்", lblLanguage: "மொழி (Language)", descLanguage: "மொழியைத் தேர்ந்தெடுக்கவும்",
+        titleSettings: "அமைப்புகள்", lblTheme: "Dark Mode", descTheme: "Light மற்றும் Dark மோடை மாற்றவும்",
+        lblLanguage: "மொழி (Language)", descLanguage: "மொழியைத் தேர்ந்தெடுக்கவும்",
         lblNotif: "அறிவிப்புகள்", descNotif: "புதுப்பிப்புகளைப் பெறுங்கள்", lblSupport: "முகவர் ஆதரவு", descSupport: "வாட்ஸ்அப் ஆதரவை தொடர்பு கொள்ளவும்",
         navHome: "முகப்பு", navDeposit: "வைப்பு", navWithdraw: "திரும்பப் பெறல்", navSettings: "அமைப்புகள்",
         phAmount: "வைப்புத் தொகையை உள்ளிடவும்", phName: "உங்கள் பெயரை உள்ளிடவும்", phGameId: "Game ID ஐ உள்ளிடவும்", phWhatsapp: "வாட்ஸ்அப் எண்ணை உள்ளிடவும்",
@@ -117,7 +120,6 @@ function setLanguage(lang) {
     document.getElementById("withdrawWhatsapp").placeholder = t.phWhatsapp;
     document.getElementById("withdrawDetails").placeholder = t.phDetails;
 
-    // Custom UI selection update
     document.querySelectorAll(".lang-option-card").forEach(card => {
         const input = card.querySelector("input");
         if (card.dataset.lang === lang) {
@@ -128,6 +130,19 @@ function setLanguage(lang) {
             if (input) input.checked = false;
         }
     });
+}
+
+function initTheme() {
+    const themeBtn = document.getElementById("toggleThemeBtn");
+    const savedTheme = localStorage.getItem("appTheme") || "dark";
+
+    if (savedTheme === "light") {
+        document.body.classList.add("light-mode");
+        if (themeBtn) themeBtn.classList.remove("on");
+    } else {
+        document.body.classList.remove("light-mode");
+        if (themeBtn) themeBtn.classList.add("on");
+    }
 }
 
 function showToast(message) {
@@ -175,15 +190,31 @@ function renderUserInfo(user) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    initTheme();
     setLanguage(currentLang);
     renderUserInfo(auth.currentUser);
 
-    // Profile Avatar click -> Settings Page
+    // Dark / Light Theme Toggle Handler
+    const toggleThemeBtn = document.getElementById("toggleThemeBtn");
+    if (toggleThemeBtn) {
+        toggleThemeBtn.addEventListener("click", () => {
+            document.body.classList.toggle("light-mode");
+            const isLight = document.body.classList.contains("light-mode");
+            
+            if (isLight) {
+                toggleThemeBtn.classList.remove("on");
+                localStorage.setItem("appTheme", "light");
+            } else {
+                toggleThemeBtn.classList.add("on");
+                localStorage.setItem("appTheme", "dark");
+            }
+        });
+    }
+
     document.getElementById("headerProfileAvatar")?.addEventListener("click", () => {
         showPage("settings");
     });
 
-    // Language selection card click event
     document.querySelectorAll(".lang-option-card").forEach(card => {
         card.addEventListener("click", () => {
             const selectedLang = card.getAttribute("data-lang");
@@ -245,10 +276,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    const toggleBtn = document.getElementById("toggleNotifBtn");
-    if (toggleBtn) {
-        toggleBtn.addEventListener("click", () => {
-            toggleBtn.classList.toggle("on");
+    const toggleNotifBtn = document.getElementById("toggleNotifBtn");
+    if (toggleNotifBtn) {
+        toggleNotifBtn.addEventListener("click", () => {
+            toggleNotifBtn.classList.toggle("on");
         });
     }
 

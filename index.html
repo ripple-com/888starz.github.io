@@ -15,7 +15,7 @@ button{ cursor:pointer; }
 
 /* HEADER */
 .header{ position:sticky; top:0; z-index:1000; height:68px; background:rgba(7,7,7,.88); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-bottom:1px solid var(--line); }
-.header-inner{ height:100%; display:flex; align-items:center; justify-space:space-between; }
+.header-inner{ height:100%; display:flex; align-items:center; justify-content:space-between; }
 .logo{ font-size:19px; font-weight:950; letter-spacing:.3px; }
 .logo span{ color:var(--orange); }
 .online{ display:flex; align-items:center; gap:7px; color:#929292; font-size:9px; font-weight:900; }
@@ -55,7 +55,7 @@ button{ cursor:pointer; }
 .quick-card h3{ margin-top:14px; font-size:14px; }
 .quick-card p{ margin-top:5px; color:#686b70; font-size:9px; }
 
-/* USER CARD FIX */
+/* USER CARD */
 .user-card { margin-top: 15px; padding: 16px 20px; background: var(--card); border: 1px solid var(--line); border-radius: 20px; display: flex; align-items: center; justify-content: space-between; }
 .user-card strong { display: block; font-size: 13px; color: #fff; }
 .user-card small { font-size: 10px; color: var(--muted); }
@@ -98,10 +98,11 @@ button{ cursor:pointer; }
 .whatsapp{ position:fixed; right:18px; bottom:98px; z-index:998; width:50px; height:50px; display:grid; place-items:center; border-radius:50%; background:#20d66b; color:#06150b; }
 .whatsapp svg{ width:23px; height:23px; stroke:currentColor; fill:none; stroke-width:1.8; }
 
-.bottom-nav{ position:fixed; left:50%; bottom:11px; transform:translateX(-50%); width:min(500px,94%); height:70px; padding:6px; display:flex; align-items:center; justify-space:space-around; background:rgba(17,17,17,.95); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,.09); border-radius:23px; z-index:9999; }
+/* BOTTOM NAVIGATION WITH ICONS */
+.bottom-nav{ position:fixed; left:50%; bottom:11px; transform:translateX(-50%); width:min(500px,94%); height:70px; padding:6px; display:flex; align-items:center; justify-space:around; background:rgba(17,17,17,.95); backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,.09); border-radius:23px; z-index:9999; }
 .nav-btn{ position:relative; width:25%; height:58px; border:0; background:transparent; color:#5d6065; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; border-radius:17px; }
-.nav-btn svg{ width:21px; height:21px; stroke:currentColor; fill:none; stroke-width:1.8; }
-.nav-btn span:last-child{ font-size:8px; font-weight:900; }
+.nav-btn svg{ width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.nav-btn span{ font-size:8px; font-weight:900; }
 .nav-btn.active{ color:var(--orange); background:rgba(255,105,0,.09); }
 .toast{ position:fixed; left:50%; bottom:92px; transform:translate(-50%,20px); z-index:10000; min-width:220px; padding:13px 18px; text-align:center; background:#202020; border:1px solid rgba(255,255,255,.08); border-radius:12px; color:#fff; font-size:10px; opacity:0; pointer-events:none; transition:.3s; }
 .toast.show{ opacity:1; transform:translate(-50%,0); }
@@ -156,25 +157,24 @@ button{ cursor:pointer; }
             </div>
 
             <div class="quick-actions">
-                <button class="quick-card" onclick="showPage('deposit')">
+                <button class="quick-card" data-page="deposit">
                     <div class="quick-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M12 16V8"/><path d="M9 11l3-3 3 3"/></svg></div>
                     <h3>Deposit</h3>
                     <p>Submit payment receipt</p>
                 </button>
-                <button class="quick-card" onclick="showPage('withdraw')">
+                <button class="quick-card" data-page="withdraw">
                     <div class="quick-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M12 8v8"/><path d="M9 13l3 3 3-3"/></svg></div>
                     <h3>Withdrawal</h3>
                     <p>Request withdrawal</p>
                 </button>
             </div>
 
-            <!-- USER CARD WITH DIRECT DEFAULT FALLBACK -->
             <div class="user-card">
                 <div>
                     <strong id="userName">User Account</strong>
                     <small id="userEmail">Active Session</small>
                 </div>
-                <button type="button" class="logout-btn" onclick="firebaseLogout()">Logout</button>
+                <button type="button" class="logout-btn" id="logoutBtn">Logout</button>
             </div>
 
             <div class="notice">
@@ -207,7 +207,7 @@ button{ cursor:pointer; }
                 <div class="form-group"><label>NAME</label><input type="text" id="depositName" placeholder="Enter your name"></div>
                 <div class="form-group"><label>GAME ID</label><input type="text" id="gameId" placeholder="Enter your Game ID"></div>
                 <div class="form-group"><label>WHATSAPP NUMBER</label><input type="tel" id="depositWhatsapp" placeholder="Enter WhatsApp number"></div>
-                <button class="submit-btn" id="depositSubmitBtn" onclick="submitDeposit()">SUBMIT DEPOSIT REQUEST</button>
+                <button class="submit-btn" id="depositSubmitBtn">SUBMIT DEPOSIT REQUEST</button>
             </div>
         </div>
     </section>
@@ -229,7 +229,7 @@ button{ cursor:pointer; }
                 <div class="form-group"><label>WITHDRAWAL AMOUNT</label><input type="number" id="withdrawAmount" placeholder="Enter withdrawal amount"></div>
                 <div class="form-group"><label>WHATSAPP NUMBER</label><input type="tel" id="withdrawWhatsapp" placeholder="Enter WhatsApp number"></div>
                 <div class="form-group"><label>PAYMENT / BANK DETAILS</label><input type="text" id="withdrawDetails" placeholder="Enter payment details"></div>
-                <button class="submit-btn" id="withdrawSubmitBtn" onclick="submitWithdrawal()">SUBMIT WITHDRAWAL REQUEST</button>
+                <button class="submit-btn" id="withdrawSubmitBtn">SUBMIT WITHDRAWAL REQUEST</button>
             </div>
         </div>
     </section>
@@ -241,9 +241,9 @@ button{ cursor:pointer; }
                 <div class="setting-item">
                     <div class="setting-icon"><svg viewBox="0 0 24 24"><path d="M18 8 a6 6 0 0 0-12 0 c0 7-3 7-3 9 h18 c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></div>
                     <div class="setting-info"><h3>Notifications</h3><p>Receive transaction updates</p></div>
-                    <button class="toggle on" onclick="toggleSetting(this)"></button>
+                    <button class="toggle on" id="toggleNotifBtn"></button>
                 </div>
-                <div class="setting-item" onclick="openWhatsApp()" style="cursor:pointer">
+                <div class="setting-item" id="whatsappSupportBtn" style="cursor:pointer">
                     <div class="setting-icon"><svg viewBox="0 0 24 24"><path d="M20 11.5 a8 8 0 0 1-11.5 7.2 L4 20l1.3-4.2 A8 8 0 1 1 20 11.5Z"/></svg></div>
                     <div class="setting-info"><h3>Agent Support</h3><p>Contact WhatsApp support</p></div>
                     <div>→</div>
@@ -256,10 +256,22 @@ button{ cursor:pointer; }
 <a href="https://wa.me/94702883324" class="whatsapp" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M20 11.5 a8 8 0 0 1-11.5 7.2 L4 20l1.3-4.2 A8 8 0 1 1 20 11.5Z"/></svg></a>
 
 <nav class="bottom-nav">
-    <button class="nav-btn active" data-page="home" onclick="showPage('home')"><span>Home</span></button>
-    <button class="nav-btn" data-page="deposit" onclick="showPage('deposit')"><span>Deposit</span></button>
-    <button class="nav-btn" data-page="withdraw" onclick="showPage('withdraw')"><span>Withdrawal</span></button>
-    <button class="nav-btn" data-page="settings" onclick="showPage('settings')"><span>Setting</span></button>
+    <button class="nav-btn active" data-page="home">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span>Home</span>
+    </button>
+    <button class="nav-btn" data-page="deposit">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M12 16V8"/><path d="M9 11l3-3 3 3"/></svg>
+        <span>Deposit</span>
+    </button>
+    <button class="nav-btn" data-page="withdraw">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M12 8v8"/><path d="M9 13l3 3 3-3"/></svg>
+        <span>Withdrawal</span>
+    </button>
+    <button class="nav-btn" data-page="settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Setting</span>
+    </button>
 </nav>
 
 <div id="toast" class="toast"></div>

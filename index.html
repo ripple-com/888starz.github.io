@@ -6,7 +6,6 @@
     <title>888STARZ Agent | Dashboard</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
 
 <!-- HEADER -->
@@ -70,6 +69,7 @@
         <div class="page-header">
             <small>DEPOSIT</small>
             <h1>Deposit Request</h1>
+            <p>Payment receipt එක upload කරලා පහත details සම්පූර්ණ කරන්න.</p>
         </div>
 
         <div class="form-card">
@@ -79,23 +79,26 @@
                 <div id="uploadContent">
                     <div class="upload-icon">↑</div>
                     <strong>Upload Receipt</strong>
+                    <span>JPG / PNG / WEBP — Max 5MB</span>
                 </div>
-                <input type="file" id="receipt" accept="image/*">
+                <input type="file" id="receipt" accept="image/jpeg,image/png,image/webp">
             </div>
 
             <label>DEPOSIT AMOUNT</label>
-            <input type="number" id="depositAmount" placeholder="Enter amount">
+            <input type="number" id="depositAmount" placeholder="Enter deposit amount">
 
             <label>NAME</label>
-            <input type="text" id="depositName" placeholder="Enter name">
+            <input type="text" id="depositName" placeholder="Enter your name">
 
             <label>GAME ID</label>
-            <input type="text" id="gameId" placeholder="Enter Game ID">
+            <input type="text" id="gameId" placeholder="Enter your Game ID">
 
             <label>WHATSAPP NUMBER</label>
             <input type="tel" id="depositWhatsapp" placeholder="Enter WhatsApp number">
 
-            <button type="button" class="submit-btn" id="depositSubmitBtn" onclick="submitDeposit()">SUBMIT DEPOSIT</button>
+            <button type="button" class="submit-btn" id="depositSubmitBtn" onclick="submitDeposit()">
+                SUBMIT DEPOSIT REQUEST
+            </button>
         </div>
     </div>
 </section>
@@ -106,25 +109,28 @@
         <div class="page-header">
             <small>WITHDRAWAL</small>
             <h1>Withdrawal Request</h1>
+            <p>Withdrawal request එක සඳහා ඔබගේ details ඇතුළත් කරන්න.</p>
         </div>
 
         <div class="form-card">
             <label>NAME</label>
-            <input type="text" id="withdrawName" placeholder="Enter name">
+            <input type="text" id="withdrawName" placeholder="Enter your name">
 
             <label>GAME ID</label>
-            <input type="text" id="withdrawGameId" placeholder="Enter Game ID">
+            <input type="text" id="withdrawGameId" placeholder="Enter your Game ID">
 
             <label>WITHDRAWAL AMOUNT</label>
-            <input type="number" id="withdrawAmount" placeholder="Enter amount">
+            <input type="number" id="withdrawAmount" placeholder="Enter withdrawal amount">
 
             <label>WHATSAPP NUMBER</label>
             <input type="tel" id="withdrawWhatsapp" placeholder="Enter WhatsApp number">
 
-            <label>PAYMENT DETAILS</label>
-            <input type="text" id="withdrawDetails" placeholder="Bank / Account details">
+            <label>PAYMENT / BANK DETAILS</label>
+            <input type="text" id="withdrawDetails" placeholder="Enter payment details">
 
-            <button type="button" class="submit-btn" id="withdrawSubmitBtn" onclick="submitWithdrawal()">SUBMIT WITHDRAWAL</button>
+            <button type="button" class="submit-btn" id="withdrawSubmitBtn" onclick="submitWithdrawal()">
+                SUBMIT WITHDRAWAL REQUEST
+            </button>
         </div>
     </div>
 </section>
@@ -135,6 +141,7 @@
         <div class="page-header">
             <small>SETTINGS</small>
             <h1>Settings</h1>
+            <p>Account සහ support options.</p>
         </div>
 
         <div class="settings-list">
@@ -152,6 +159,7 @@
                     <h3>Agent Support</h3>
                     <p>Contact WhatsApp support</p>
                 </div>
+                <div class="setting-arrow">→</div>
             </button>
 
             <button type="button" class="setting-item action" onclick="logout()">
@@ -160,6 +168,7 @@
                     <h3>Logout</h3>
                     <p>Sign out from this device</p>
                 </div>
+                <div class="setting-arrow">→</div>
             </button>
         </div>
     </div>
@@ -167,8 +176,10 @@
 
 </main>
 
+<!-- WHATSAPP BUTTON -->
 <a href="https://wa.me/94702883324" class="whatsapp" target="_blank">☎</a>
 
+<!-- BOTTOM NAVIGATION -->
 <nav class="bottom-nav">
     <button type="button" class="nav-btn active" data-page="home" onclick="showPage('home')">
         <span class="nav-symbol">⌂</span>
@@ -188,75 +199,11 @@
     </button>
 </nav>
 
+<!-- TOAST -->
 <div id="toast" class="toast"></div>
 
+<!-- JS -->
 <script type="module" src="js/app.js"></script>
-</body>
-</html>
-type="button"
-        class="nav-btn"
-        data-page="withdraw"
-        onclick="showPage('withdraw')"
-    >
-
-        <span class="nav-symbol">
-            ↓
-        </span>
-
-        <span>
-            Withdrawal
-        </span>
-
-    </button>
-
-
-
-    <!-- SETTINGS -->
-
-    <button
-        type="button"
-        class="nav-btn"
-        data-page="settings"
-        onclick="showPage('settings')"
-    >
-
-        <span class="nav-symbol">
-            ⚙
-        </span>
-
-        <span>
-            Setting
-        </span>
-
-    </button>
-
-
-</nav>
-
-
-
-<!-- =====================================================
-     TOAST
-===================================================== -->
-
-<div
-    id="toast"
-    class="toast"
-    role="status"
-    aria-live="polite"
-></div>
-
-
-
-<!-- =====================================================
-     FIREBASE / APP
-===================================================== -->
-
-<script
-    type="module"
-    src="js/app.js"
-></script>
-
 
 </body>
 </html>

@@ -28,7 +28,7 @@ const translations = {
         slide2Small: "EASY WITHDRAWAL", slide2Title: "Quick<br>Withdrawal", slide2Desc: "Send your withdrawal request through our agent.",
         slide3Small: "24 / 7 SUPPORT", slide3Title: "Agent<br>Support", slide3Desc: "Get assistance whenever you need it.",
         btnDeposit: "Deposit", btnDepositSub: "Submit payment receipt", btnWithdraw: "Withdrawal", btnWithdrawSub: "Request withdrawal",
-        btnLogout: "Logout", homeNotice: "This is an independent agent service and is not the official 888Starz website.",
+        btnLogout: "Logout", descLogout: "Sign out from your account", homeNotice: "This is an independent agent service and is not the official 888Starz website.",
         depositTitle: "Deposit Request", depositDesc: "Upload payment receipt and complete the details below.",
         lblReceipt: "PAYMENT RECEIPT", txtUpload: "Upload Receipt", lblAmount: "DEPOSIT AMOUNT", lblName: "NAME", lblGameId: "GAME ID",
         lblWhatsapp: "WHATSAPP NUMBER", btnSubmitDeposit: "SUBMIT DEPOSIT REQUEST",
@@ -52,7 +52,7 @@ const translations = {
         slide2Small: "පහසු මුදල් ආපසු ගැනීම", slide2Title: "ඉක්මන් මුදල් ලබාගැනීම", slide2Desc: "ඔබේ මුදල් ආපසු ගැනීමේ ඉල්ලීම අපගේ නියෝජිතයා වෙත යවන්න.",
         slide3Small: "24/7 සහාය", slide3Title: "නියෝජිත සහාය", slide3Desc: "ඔබට අවශ්‍ය ඕනෑම වේලාවක සහාය ලබා ගන්න.",
         btnDeposit: "තැන්පතු (Deposit)", btnDepositSub: "ගෙවීම් රිසිට්පත යොමු කරන්න", btnWithdraw: "මුදල් ගැනීම (Withdrawal)", btnWithdrawSub: "මුදල් ලබාගැනීමට ඉල්ලන්න",
-        btnLogout: "ඉවත් වන්න (Logout)", homeNotice: "මෙය ස්වාධීන නියෝජිත සේවාවක් වන අතර 888Starz නිල වෙබ් අඩවිය නොවේ.",
+        btnLogout: "ඉවත් වන්න (Logout)", descLogout: "ගිණුමෙන් ඉවත් වන්න", homeNotice: "මෙය ස්වාධීන නියෝජිත සේවාවක් වන අතර 888Starz නිල වෙබ් අඩවිය නොවේ.",
         depositTitle: "තැන්පතු ඉල්ලීම", depositDesc: "ගෙවීම් රිසිට්පත උඩුගත කර පහත විස්තර සම්පූර්ණ කරන්න.",
         lblReceipt: "ගෙවීම් රිසිට්පත", txtUpload: "රිසිට්පත Upload කරන්න", lblAmount: "තැන්පතු මුදල", lblName: "ඔබේ නම", lblGameId: "ගිණුම් අංකය (Game ID)",
         lblWhatsapp: "WHATSAPP අංකය", btnSubmitDeposit: "තැන්පතු ඉල්ලීම යොමු කරන්න",
@@ -76,7 +76,7 @@ const translations = {
         slide2Small: "எளிதான திரும்பப் பெறல்", slide2Title: "விரைவான திரும்பப் பெறல்", slide2Desc: "உங்கள் கோரிக்கையை முகவர் மூலம் அனுப்பவும்.",
         slide3Small: "24/7 ஆதரவு", slide3Title: "முகவர் ஆதரவு", slide3Desc: "உங்களுக்குத் தேவையான போதெல்லாம் உதவி பெறுங்கள்.",
         btnDeposit: "வைப்பு (Deposit)", btnDepositSub: "ரசீதை சமர்ப்பிக்கவும்", btnWithdraw: "திரும்பப் பெறல்", btnWithdrawSub: "பணத்தை கோருங்கள்",
-        btnLogout: "வெளியேறு", homeNotice: "இது ஒரு சுயாதீன முகவர் சேவையாகும், அதிகாரப்பூர்வ வலைத்தளம் அல்ல.",
+        btnLogout: "வெளியேறு", descLogout: "கணக்கிலிருந்து வெளியேறவும்", homeNotice: "இது ஒரு சுயாதீன முகவர் சேவையாகும், அதிகாரப்பூர்வ வலைத்தளம் அல்ல.",
         depositTitle: "வைப்பு கோரிக்கை", depositDesc: "ரசீதை பதிவேற்றி கீழே உள்ள விவரங்களை பூர்த்தி செய்யவும்.",
         lblReceipt: "பணம் செலுத்திய ரசீது", txtUpload: "ரசீதை பதிவேற்றவும்", lblAmount: "வைப்புத் தொகை", lblName: "பெயர்", lblGameId: "கேம் ஐடி (Game ID)",
         lblWhatsapp: "வாட்ஸ்அப் எண்", btnSubmitDeposit: "வைப்பு கோரிக்கையை சமர்ப்பிக்கவும்",
@@ -168,24 +168,25 @@ function renderUserInfo(user) {
     const nameEl = document.getElementById("userName");
     const emailEl = document.getElementById("userEmail");
     const avatarTextEl = document.getElementById("avatarText");
+    const settingAvatarText = document.getElementById("settingAvatarText");
 
     if (user) {
         const displayName = user.displayName || user.email || "User";
+        const initial = displayName.charAt(0).toUpperCase();
+
         if (nameEl) nameEl.textContent = user.displayName || "User Account";
         if (emailEl) emailEl.textContent = user.email || "Active User";
-        
-        if (avatarTextEl) {
-            avatarTextEl.textContent = displayName.charAt(0).toUpperCase();
-        }
+        if (avatarTextEl) avatarTextEl.textContent = initial;
+        if (settingAvatarText) settingAvatarText.textContent = initial;
     } else {
         const cachedName = localStorage.getItem("userName");
         const cachedEmail = localStorage.getItem("userEmail");
+        const initial = cachedName ? cachedName.charAt(0).toUpperCase() : "U";
+
         if (nameEl) nameEl.textContent = cachedName || "Guest User";
         if (emailEl) emailEl.textContent = cachedEmail || "Not Logged In";
-        
-        if (avatarTextEl) {
-            avatarTextEl.textContent = cachedName ? cachedName.charAt(0).toUpperCase() : "U";
-        }
+        if (avatarTextEl) avatarTextEl.textContent = initial;
+        if (settingAvatarText) settingAvatarText.textContent = initial;
     }
 }
 
@@ -263,6 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Logout Handler (Now inside Settings Page)
     const logoutBtn = document.getElementById("logoutBtn");
     if (logoutBtn) {
         logoutBtn.addEventListener("click", async () => {

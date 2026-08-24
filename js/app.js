@@ -3,6 +3,10 @@ import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/fi
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
 
+// TELEGRAM BOT CONFIGURATION
+const TELEGRAM_BOT_TOKEN = "YOUR_TELEGRAM_BOT_TOKEN"; // මෙතනට ඔයාගේ Bot Token එක දාන්න
+const TELEGRAM_CHAT_ID = "YOUR_TELEGRAM_CHAT_ID";     // මෙතනට Chat ID එක හෝ Group ID එක දාන්න
+
 const firebaseConfig = {
     apiKey: "AIzaSyCdLAlDB0GK6_GhvpgFLnjmwO_VRbvRIms",
     authDomain: "suwahas-sathsara.firebaseapp.com",
@@ -195,7 +199,6 @@ document.addEventListener("DOMContentLoaded", () => {
     setLanguage(currentLang);
     renderUserInfo(auth.currentUser);
 
-    // Dark / Light Theme Toggle Handler
     const toggleThemeBtn = document.getElementById("toggleThemeBtn");
     if (toggleThemeBtn) {
         toggleThemeBtn.addEventListener("click", () => {
@@ -264,7 +267,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Logout Handler (Now inside Settings Page)
     const logoutBtn = document.getElementById("logoutBtn");
     if (logoutBtn) {
         logoutBtn.addEventListener("click", async () => {
@@ -292,6 +294,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // DEPOSIT SUBMIT WITH TELEGRAM BOT INTEGRATION
     const depositSubmitBtn = document.getElementById("depositSubmitBtn");
     if (depositSubmitBtn) {
         depositSubmitBtn.addEventListener("click", async () => {
@@ -314,17 +317,55 @@ document.addEventListener("DOMContentLoaded", () => {
                 depositSubmitBtn.textContent = "...";
 
                 const userId = user ? user.uid : "guest";
+                
+                // 1. Storage Upload
                 const fileRef = ref(storage, `receipts/${userId}/${Date.now()}_${file.name}`);
                 await uploadBytes(fileRef, file);
                 const receiptURL = await getDownloadURL(fileRef);
 
+                // 2. Firestore Save
                 await addDoc(collection(db, "depositRequests"), {
                     userId, name, gameId, whatsapp, amount: Number(amount), receiptURL, status: "pending", createdAt: serverTimestamp()
                 });
 
+                // 3. Telegram Message Send
+                if (TELEGRAM_BOT_TOKEN !== "YOUR_TELEGRAM_BOT_TOKEN") {
+                    const caption = `📌 *NEW DEPOSIT REQUEST*\n\n` +
+                                    `👤 *Name:* ${name}\n` +
+                                    `🎮 *Game ID:* ${gameId}\n` +
+                                    `💰 *Amount:* LKR ${amount}\n` +
+                                    `📱 *WhatsApp:* ${whatsapp}\n` +
+                                    `🆔 *User ID:* ${userId}\n` +
+                                    `⏰ *Time:* ${new Date().toLocaleString()}`;
+
+                    const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`;
+                    
+                    await fetch(telegramUrl, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            chat_id: TELEGRAM_CHAT_ID,
+                            photo: receiptURL,
+                            caption: caption,
+                            parse_mode: "Markdown"
+                        })
+                    });
+                }
+
                 showToast(t.msgDepSuccess);
                 showPage("home");
+
+                // Reset Fields
+                document.getElementById("depositAmount").value = "";
+                document.getElementById("depositName").value = "";
+                document.getElementById("gameId").value = "";
+                document.getElementById("depositWhatsapp").value = "";
+                document.getElementById("receipt").value = "";
+                document.getElementById("receiptPreview").style.display = "none";
+                document.getElementById("uploadContent").style.display = "flex";
+
             } catch (err) {
+                console.error(err);
                 showToast("Error: " + err.message);
             } finally {
                 depositSubmitBtn.disabled = false;

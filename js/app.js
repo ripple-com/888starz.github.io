@@ -1,26 +1,33 @@
-import { auth, firebaseLogout } from "./firebase.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
 
-const db = getFirestore();
-const storage = getStorage();
+const firebaseConfig = {
+    apiKey: "AIzaSyCdLAlDB0GK6_GhvpgFLnjmwO_VRbvRIms",
+    authDomain: "suwahas-sathsara.firebaseapp.com",
+    projectId: "suwahas-sathsara",
+    storageBucket: "suwahas-sathsara.firebasestorage.app",
+    messagingSenderId: "394222087823",
+    appId: "1:394222087823:web:1ae06879cb6e3763860afa",
+    measurementId: "G-Z782V6MDGM"
+};
 
-window.firebaseLogout = firebaseLogout;
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+const googleProvider = new GoogleAuthProvider();
 
-/* PAGE NAVIGATION */
+// Bind Page Navigation to Window
 window.showPage = function (page) {
     document.querySelectorAll(".page").forEach(el => el.classList.remove("active"));
-    
     const target = document.getElementById(page + "Page");
-    if (target) {
-        target.classList.add("active");
-    }
+    if (target) target.classList.add("active");
 
     document.querySelectorAll(".nav-btn").forEach(btn => {
         btn.classList.toggle("active", btn.dataset.page === page);
     });
-
     window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
@@ -32,27 +39,49 @@ window.toggleSetting = function (button) {
     button.classList.toggle("on");
 };
 
-/* USER DATA UI UPDATE FIX */
-function updateUI(user) {
+window.googleLogin = async function () {
+    try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+        localStorage.setItem("firebaseLoggedIn", "true");
+        localStorage.setItem("userName", user.displayName || "");
+        localStorage.setItem("userEmail", user.email || "");
+        window.location.href = "index.html";
+    } catch (error) {
+        alert("Login failed: " + error.message);
+    }
+};
+
+window.firebaseLogout = async function () {
+    try {
+        await signOut(auth);
+        localStorage.clear();
+        window.location.href = "login.html";
+    } catch (error) {
+        console.error("Logout Error:", error);
+    }
+};
+
+// UI Update Function with Instant Fallback
+function updateUserInfo(name, email) {
     const nameEl = document.getElementById("userName");
     const emailEl = document.getElementById("userEmail");
     const settingsEmailEl = document.getElementById("settingsEmail");
 
-    // Get data from Firebase User Object OR LocalStorage fallback
-    const name = user?.displayName || localStorage.getItem("userName") || "Agent User";
-    const email = user?.email || localStorage.getItem("userEmail") || "No email available";
+    const finalName = name || localStorage.getItem("userName") || "Authorized Agent";
+    const finalEmail = email || localStorage.getItem("userEmail") || "Agent Account Active";
 
-    if (nameEl) nameEl.textContent = name;
-    if (emailEl) emailEl.textContent = email;
-    if (settingsEmailEl) settingsEmailEl.textContent = email;
+    if (nameEl) nameEl.textContent = finalName;
+    if (emailEl) emailEl.textContent = finalEmail;
+    if (settingsEmailEl) settingsEmailEl.textContent = finalEmail;
 }
 
-/* INITIALIZATION & LISTENERS */
+// Immediate Execution on Load
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. Page Load වූ සැණින් LocalStorage data පෙන්වන්න (Loading... වෙනුවට)
-    updateUI(null);
+    // 1. Instantly set user info from cache or default
+    updateUserInfo();
 
-    // 2. Image Slider Logic
+    // 2. Image Slider
     const slides = document.querySelectorAll(".slide");
     const dots = document.querySelectorAll(".slider-dot");
     let currentSlide = 0;
@@ -61,25 +90,18 @@ document.addEventListener("DOMContentLoaded", () => {
         setInterval(() => {
             slides[currentSlide].classList.remove("active");
             if (dots[currentSlide]) dots[currentSlide].classList.remove("active");
-
             currentSlide = (currentSlide + 1) % slides.length;
-
             slides[currentSlide].classList.add("active");
             if (dots[currentSlide]) dots[currentSlide].classList.add("active");
         }, 4000);
     }
 
-    // 3. Receipt Image Preview Setup
+    // 3. Receipt Upload Preview
     const receiptInput = document.getElementById("receipt");
     if (receiptInput) {
         receiptInput.addEventListener("change", function () {
             const file = this.files[0];
             if (!file) return;
-
-            if (!file.type.startsWith("image/")) {
-                showToast("Please select an image receipt.");
-                return;
-            }
 
             const reader = new FileReader();
             reader.onload = function (e) {
@@ -96,41 +118,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-/* AUTH STATE LISTENER (Firebase Sync) */
+// Auth State Sync
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // User logged in නම් LocalStorage update කර UI එක refresh කරන්න
         localStorage.setItem("firebaseLoggedIn", "true");
-        localStorage.setItem("userName", user.displayName || "Agent User");
+        localStorage.setItem("userName", user.displayName || "");
         localStorage.setItem("userEmail", user.email || "");
-        updateUI(user);
+        updateUserInfo(user.displayName, user.email);
     } else {
-        // User Login වී නැත්නම් Redirect කරන්න
-        const cachedLoggedIn = localStorage.getItem("firebaseLoggedIn");
-        if (!cachedLoggedIn) {
-            window.location.href = "login.html";
-        } else {
-            updateUI(null);
-        }
+        updateUserInfo();
     }
 });
 
-/* TOAST SYSTEM */
-let toastTimer;
 function showToast(message) {
     const toast = document.getElementById("toast");
     if (!toast) return;
-
     toast.textContent = message;
     toast.classList.add("show");
-
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-        toast.classList.remove("show");
-    }, 2800);
+    setTimeout(() => toast.classList.remove("show"), 2800);
 }
 
-/* DEPOSIT SUBMIT */
+// Submit Functions
 window.submitDeposit = async function () {
     const user = auth.currentUser;
     const amount = document.getElementById("depositAmount").value.trim();
@@ -141,13 +149,8 @@ window.submitDeposit = async function () {
     const file = fileInput ? fileInput.files[0] : null;
     const btn = document.getElementById("depositSubmitBtn");
 
-    if (!file) {
-        showToast("Please upload your receipt.");
-        return;
-    }
-
-    if (!amount || !name || !gameId || !whatsapp) {
-        showToast("Please complete all fields.");
+    if (!file || !amount || !name || !gameId || !whatsapp) {
+        showToast("Please fill all fields and attach receipt.");
         return;
     }
 
@@ -161,28 +164,19 @@ window.submitDeposit = async function () {
         const receiptURL = await getDownloadURL(fileRef);
 
         await addDoc(collection(db, "depositRequests"), {
-            userId,
-            name,
-            gameId,
-            whatsapp,
-            amount: Number(amount),
-            receiptURL,
-            status: "pending",
-            createdAt: serverTimestamp()
+            userId, name, gameId, whatsapp, amount: Number(amount), receiptURL, status: "pending", createdAt: serverTimestamp()
         });
 
         showToast("Deposit request submitted successfully!");
         window.showPage("home");
     } catch (err) {
-        console.error(err);
-        showToast("Submission failed: " + err.message);
+        showToast("Error: " + err.message);
     } finally {
         btn.disabled = false;
         btn.textContent = "SUBMIT DEPOSIT REQUEST";
     }
 };
 
-/* WITHDRAWAL SUBMIT */
 window.submitWithdrawal = async function () {
     const user = auth.currentUser;
     const name = document.getElementById("withdrawName").value.trim();
@@ -193,7 +187,7 @@ window.submitWithdrawal = async function () {
     const btn = document.getElementById("withdrawSubmitBtn");
 
     if (!name || !gameId || !amount || !whatsapp || !details) {
-        showToast("Please complete all fields.");
+        showToast("Please fill all fields.");
         return;
     }
 
@@ -203,21 +197,13 @@ window.submitWithdrawal = async function () {
 
         const userId = user ? user.uid : "guest";
         await addDoc(collection(db, "withdrawalRequests"), {
-            userId,
-            name,
-            gameId,
-            amount: Number(amount),
-            whatsapp,
-            paymentDetails: details,
-            status: "pending",
-            createdAt: serverTimestamp()
+            userId, name, gameId, amount: Number(amount), whatsapp, paymentDetails: details, status: "pending", createdAt: serverTimestamp()
         });
 
         showToast("Withdrawal request submitted successfully!");
         window.showPage("home");
     } catch (err) {
-        console.error(err);
-        showToast("Submission failed: " + err.message);
+        showToast("Error: " + err.message);
     } finally {
         btn.disabled = false;
         btn.textContent = "SUBMIT WITHDRAWAL REQUEST";

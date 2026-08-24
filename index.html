@@ -1,206 +1,831 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>888STARZ Agent | Dashboard</title>
-    <link rel="stylesheet" href="css/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>888Starz Agent | Deposit & Withdrawal</title>
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+:root{
+    --orange:#ff6900;
+    --orange2:#ff9200;
+    --bg:#070707;
+    --card:#111214;
+    --card2:#18191c;
+    --text:#fff;
+    --muted:#85888f;
+    --line:rgba(255,255,255,.08);
+    --green:#20d66b;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    min-height:100vh;
+    padding-bottom:105px;
+    background:
+        radial-gradient(
+            circle at 50% -10%,
+            rgba(255,105,0,.16),
+            transparent 36%
+        ),
+        #070707;
+    color:var(--text);
+    font-family:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Arial,
+        sans-serif;
+}
+
+button,
+input{
+    font-family:inherit;
+}
+
+button{
+    cursor:pointer;
+}
+
+.container{
+    width:min(650px,92%);
+    margin:auto;
+}
+
+/* HEADER */
+.header{
+    position:sticky;
+    top:0;
+    z-index:1000;
+    height:68px;
+    background:rgba(7,7,7,.88);
+    backdrop-filter:blur(20px);
+    -webkit-backdrop-filter:blur(20px);
+    border-bottom:1px solid var(--line);
+}
+
+.header-inner{
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-space:space-between;
+}
+
+.logo{
+    font-size:19px;
+    font-weight:950;
+    letter-spacing:.3px;
+}
+
+.logo span{
+    color:var(--orange);
+}
+
+.online{
+    display:flex;
+    align-items:center;
+    gap:7px;
+    color:#929292;
+    font-size:9px;
+    font-weight:900;
+}
+
+.online-dot{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 12px var(--green);
+}
+
+/* PAGE SYSTEM */
+.page{
+    display:none;
+    animation:pageIn .28s ease;
+}
+
+.page.active{
+    display:block;
+}
+
+@keyframes pageIn{
+    from{
+        opacity:0;
+        transform:translateY(8px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+}
+
+/* HOME */
+.home-title{
+    padding:35px 0 20px;
+}
+
+.home-title small{
+    color:var(--orange);
+    font-size:9px;
+    font-weight:950;
+    letter-spacing:1.5px;
+}
+
+.home-title h1{
+    margin-top:10px;
+    font-size:40px;
+    line-height:.98;
+    letter-spacing:-1.7px;
+    font-weight:950;
+}
+
+.home-title h1 span{
+    color:var(--orange);
+}
+
+.home-title p{
+    margin-top:14px;
+    color:var(--muted);
+    font-size:11px;
+    line-height:1.7;
+}
+
+/* IMAGE SLIDER */
+.slider{
+    position:relative;
+    height:250px;
+    overflow:hidden;
+    border-radius:25px;
+    background:#151515;
+    border:1px solid rgba(255,105,0,.20);
+    box-shadow:0 20px 60px rgba(0,0,0,.45);
+}
+
+.slide{
+    position:absolute;
+    inset:0;
+    opacity:0;
+    background-size:cover;
+    background-position:center;
+    transition:opacity .55s ease;
+}
+
+.slide.active{
+    opacity:1;
+}
+
+.slide::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(90deg, rgba(0,0,0,.87), rgba(0,0,0,.32), rgba(0,0,0,.63));
+}
+
+.slide-content{
+    position:absolute;
+    z-index:2;
+    left:25px;
+    bottom:28px;
+    max-width:76%;
+}
+
+.slide-content small{
+    color:var(--orange);
+    font-size:9px;
+    font-weight:950;
+    letter-spacing:1px;
+}
+
+.slide-content h2{
+    margin-top:8px;
+    font-size:27px;
+    line-height:1.03;
+    letter-spacing:-.7px;
+}
+
+.slide-content p{
+    margin-top:8px;
+    color:#bbb;
+    font-size:9px;
+    line-height:1.5;
+}
+
+.slider-dots{
+    position:absolute;
+    z-index:5;
+    right:18px;
+    bottom:14px;
+    display:flex;
+    align-items:center;
+    gap:5px;
+}
+
+.slider-dot{
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:#777;
+    transition:.25s;
+}
+
+.slider-dot.active{
+    width:18px;
+    border-radius:10px;
+    background:var(--orange);
+}
+
+/* QUICK ACTIONS */
+.quick-actions{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+    margin-top:15px;
+}
+
+.quick-card{
+    width:100%;
+    padding:20px;
+    text-align:left;
+    color:#fff;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:20px;
+    transition:.25s;
+}
+
+.quick-card:hover{
+    transform:translateY(-3px);
+    border-color:rgba(255,105,0,.3);
+}
+
+.quick-icon{
+    width:44px;
+    height:44px;
+    display:grid;
+    place-items:center;
+    border-radius:14px;
+    background:rgba(255,105,0,.1);
+    color:var(--orange);
+}
+
+.quick-icon svg{
+    width:21px;
+    height:21px;
+    stroke:currentColor;
+    fill:none;
+    stroke-width:1.8;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+}
+
+.quick-card h3{
+    margin-top:14px;
+    font-size:14px;
+}
+
+.quick-card p{
+    margin-top:5px;
+    color:#686b70;
+    font-size:9px;
+}
+
+/* USER CARD ENHANCEMENT */
+.user-card {
+    margin-top: 15px;
+    padding: 16px 20px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.user-card strong { display: block; font-size: 13px; color: #fff; }
+.user-card small { font-size: 10px; color: var(--muted); }
+.logout-btn {
+    background: rgba(255,105,0,.15);
+    color: var(--orange);
+    border: 1px solid rgba(255,105,0,.3);
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 900;
+}
+
+/* PAGE HEADER */
+.page-header{
+    padding:35px 0 22px;
+}
+
+.page-header small{
+    color:var(--orange);
+    font-size:9px;
+    font-weight:950;
+    letter-spacing:1.3px;
+}
+
+.page-header h1{
+    margin-top:8px;
+    font-size:31px;
+    letter-spacing:-.8px;
+}
+
+.page-header p{
+    margin-top:8px;
+    color:var(--muted);
+    font-size:11px;
+    line-height:1.65;
+}
+
+/* FORM CARD */
+.form-card{
+    padding:21px;
+    background:linear-gradient(145deg, #151515, #0d0d0d);
+    border:1px solid var(--line);
+    border-radius:23px;
+}
+
+.form-group{
+    margin-bottom:16px;
+}
+
+.form-group label{
+    display:block;
+    margin-bottom:7px;
+    color:#b8b8b8;
+    font-size:9px;
+    font-weight:900;
+    letter-spacing:.4px;
+}
+
+.form-group input{
+    width:100%;
+    height:50px;
+    padding:0 15px;
+    outline:none;
+    color:#fff;
+    background:#090909;
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:13px;
+    font-size:12px;
+    transition:.2s;
+}
+
+.form-group input::placeholder{
+    color:#4f5156;
+}
+
+.form-group input:focus{
+    border-color:var(--orange);
+    box-shadow:0 0 0 3px rgba(255,105,0,.07);
+}
+
+/* RECEIPT UPLOAD */
+.upload-box{
+    position:relative;
+    min-height:145px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:18px;
+    text-align:center;
+    overflow:hidden;
+    background:#090909;
+    border:1px dashed rgba(255,105,0,.35);
+    border-radius:17px;
+}
+
+.upload-icon{
+    width:48px;
+    height:48px;
+    display:grid;
+    place-items:center;
+    border-radius:15px;
+    background:rgba(255,105,0,.1);
+    color:var(--orange);
+}
+
+.upload-icon svg{
+    width:22px;
+    height:22px;
+    stroke:currentColor;
+    fill:none;
+    stroke-width:1.8;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+}
+
+.upload-box strong{
+    margin-top:10px;
+    font-size:12px;
+}
+
+.upload-box span{
+    margin-top:5px;
+    color:#606269;
+    font-size:9px;
+}
+
+.upload-box input{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    opacity:0;
+    cursor:pointer;
+}
+
+.receipt-preview{
+    display:none;
+    width:100%;
+    max-height:190px;
+    object-fit:contain;
+    border-radius:12px;
+}
+
+/* BUTTON */
+.submit-btn{
+    width:100%;
+    height:52px;
+    border:0;
+    border-radius:14px;
+    background:linear-gradient(135deg, var(--orange), var(--orange2));
+    color:#090909;
+    font-size:11px;
+    font-weight:950;
+    box-shadow:0 10px 30px rgba(255,105,0,.18);
+    transition:.25s;
+}
+
+.submit-btn:hover{ transform:translateY(-2px); }
+.submit-btn:active{ transform:scale(.98); }
+
+/* WITHDRAW INFO */
+.withdraw-info{
+    display:flex;
+    gap:12px;
+    padding:16px;
+    margin-bottom:17px;
+    border-radius:16px;
+    background:rgba(255,105,0,.05);
+    border:1px solid rgba(255,105,0,.12);
+}
+
+.withdraw-info-icon{
+    width:38px;
+    height:38px;
+    flex-shrink:0;
+    display:grid;
+    place-items:center;
+    border-radius:12px;
+    background:rgba(255,105,0,.1);
+    color:var(--orange);
+    font-size:17px;
+    font-weight:950;
+}
+
+.withdraw-info h4{ font-size:11px; }
+.withdraw-info p{ margin-top:4px; color:#696b70; font-size:9px; line-height:1.5; }
+
+/* SETTINGS */
+.settings-list{ display:flex; flex-direction:column; gap:10px; }
+.setting-item{ display:flex; align-items:center; gap:14px; padding:17px; background:var(--card); border:1px solid var(--line); border-radius:17px; }
+.setting-icon{ width:42px; height:42px; flex-shrink:0; display:grid; place-items:center; border-radius:13px; background:var(--card2); color:var(--orange); }
+.setting-icon svg{ width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.setting-info{ flex:1; }
+.setting-info h3{ font-size:12px; }
+.setting-info p{ margin-top:4px; color:#62656a; font-size:9px; }
+.setting-arrow{ color:#555; }
+
+/* TOGGLE */
+.toggle{ width:42px; height:23px; padding:3px; border:0; border-radius:20px; background:#303030; }
+.toggle::after{ content:""; display:block; width:17px; height:17px; border-radius:50%; background:#888; transition:.25s; }
+.toggle.on{ background:var(--orange); }
+.toggle.on::after{ transform:translateX(19px); background:#111; }
+
+.notice{ margin-top:18px; padding:15px; text-align:center; color:#555; font-size:8px; line-height:1.6; }
+
+/* WHATSAPP */
+.whatsapp{ position:fixed; right:18px; bottom:98px; z-index:998; width:50px; height:50px; display:grid; place-items:center; border-radius:50%; background:#20d66b; color:#06150b; box-shadow:0 10px 30px rgba(32,214,107,.25); transition:.2s; }
+.whatsapp:hover{ transform:scale(1.07); }
+.whatsapp svg{ width:23px; height:23px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+/* BOTTOM NAVIGATION */
+.bottom-nav{ position:fixed; left:50%; bottom:11px; transform:translateX(-50%); width:min(500px,94%); height:70px; padding:6px; display:flex; align-items:center; justify-content:space-around; background:rgba(17,17,17,.95); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); border:1px solid rgba(255,255,255,.09); border-radius:23px; box-shadow:0 20px 70px rgba(0,0,0,.65); z-index:9999; }
+.nav-btn{ position:relative; width:25%; height:58px; border:0; background:transparent; color:#5d6065; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; border-radius:17px; transition:.25s; }
+.nav-icon{ width:22px; height:22px; display:flex; align-items:center; justify-content:center; }
+.nav-icon svg{ width:21px; height:21px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; transition:.25s; }
+.nav-btn span:last-child{ font-size:8px; font-weight:900; }
+.nav-btn.active{ color:var(--orange); background:rgba(255,105,0,.09); }
+.nav-btn.active .nav-icon svg{ transform:scale(1.08); }
+.nav-btn.active::after{ content:""; position:absolute; bottom:4px; width:5px; height:5px; border-radius:50%; background:var(--orange); box-shadow:0 0 10px var(--orange); }
+
+/* TOAST */
+.toast{ position:fixed; left:50%; bottom:92px; transform:translate(-50%,20px); z-index:10000; min-width:220px; padding:13px 18px; text-align:center; background:#202020; border:1px solid rgba(255,255,255,.08); border-radius:12px; color:#fff; font-size:10px; opacity:0; pointer-events:none; transition:.3s; }
+.toast.show{ opacity:1; transform:translate(-50%,0); }
+
+/* MOBILE */
+@media(max-width:500px){ .container{ width:92%; } .home-title h1{ font-size:38px; } .slider{ height:225px; } .slide-content h2{ font-size:24px; } .form-card{ padding:18px; } }
+@media(max-width:360px){ .bottom-nav{ width:96%; } .nav-btn span:last-child{ font-size:7px; } .slider{ height:210px; } }
+</style>
 </head>
+
 <body>
 
 <!-- HEADER -->
 <header class="header">
     <div class="container header-inner">
-        <div class="brand">888<span>STARZ</span> AGENT</div>
-        <div class="online"><i></i> ONLINE 24/7</div>
+        <div class="logo">888<span>STARZ</span> AGENT</div>
+        <div class="online">
+            <span class="online-dot"></span> ONLINE 24/7
+        </div>
     </div>
 </header>
 
 <main>
-
-<!-- HOME PAGE -->
-<section id="homePage" class="page active">
-    <div class="container">
-        <div class="home-title">
-            <small>INDEPENDENT AGENT SERVICE</small>
-            <h1>Fast Deposit<br><span>&amp; Withdrawal</span></h1>
-            <p>888STARZ customers සඳහා deposit සහ withdrawal assistance.</p>
-        </div>
-
-        <div class="hero">
-            <div class="hero-content">
-                <small>FAST &amp; EASY SERVICE</small>
-                <h2>Deposit<br>Made Easy</h2>
-                <p>Upload your payment receipt and submit your request.</p>
+    <!-- HOME PAGE -->
+    <section id="homePage" class="page active">
+        <div class="container">
+            <div class="home-title">
+                <small>INDEPENDENT AGENT SERVICE</small>
+                <h1>Fast Deposit<br><span>&amp; Withdrawal</span></h1>
+                <p>888Starz customers සඳහා deposit සහ withdrawal assistance. Transaction එකකට පෙර agent සමඟ payment details verify කරන්න.</p>
             </div>
-        </div>
 
-        <div class="quick-actions">
-            <button type="button" class="quick-card" onclick="showPage('deposit')">
-                <div class="quick-icon">↑</div>
-                <h3>Deposit</h3>
-                <p>Submit payment receipt</p>
-            </button>
-
-            <button type="button" class="quick-card" onclick="showPage('withdraw')">
-                <div class="quick-icon">↓</div>
-                <h3>Withdrawal</h3>
-                <p>Request withdrawal</p>
-            </button>
-        </div>
-
-        <!-- USER CARD -->
-        <div class="user-card">
-            <div>
-                <strong id="userName">User Name</strong>
-                <small id="userEmail">User Email</small>
-            </div>
-            <button type="button" class="logout-btn" onclick="firebaseLogout()">Logout</button>
-        </div>
-
-        <div class="notice">
-            This is an independent agent service and is not the official 888STARZ website.
-        </div>
-    </div>
-</section>
-
-<!-- DEPOSIT PAGE -->
-<section id="depositPage" class="page">
-    <div class="container">
-        <div class="page-header">
-            <small>DEPOSIT</small>
-            <h1>Deposit Request</h1>
-            <p>Payment receipt එක upload කරලා පහත details සම්පූර්ණ කරන්න.</p>
-        </div>
-
-        <div class="form-card">
-            <label>PAYMENT RECEIPT</label>
-            <div class="upload-box">
-                <img id="receiptPreview" class="receipt-preview" alt="Preview">
-                <div id="uploadContent">
-                    <div class="upload-icon">↑</div>
-                    <strong>Upload Receipt</strong>
-                    <span>JPG / PNG / WEBP — Max 5MB</span>
+            <!-- SLIDER -->
+            <div class="slider">
+                <div class="slide active" style="background-image:url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&amp;fit=crop&amp;w=1200&amp;q=80');">
+                    <div class="slide-content">
+                        <small>FAST SERVICE</small>
+                        <h2>Deposit<br>Made Easy</h2>
+                        <p>Upload your receipt and submit your deposit details.</p>
+                    </div>
                 </div>
-                <input type="file" id="receipt" accept="image/*">
-            </div>
-
-            <label>DEPOSIT AMOUNT</label>
-            <input type="number" id="depositAmount" placeholder="Enter deposit amount">
-
-            <label>NAME</label>
-            <input type="text" id="depositName" placeholder="Enter your name">
-
-            <label>GAME ID</label>
-            <input type="text" id="gameId" placeholder="Enter your Game ID">
-
-            <label>WHATSAPP NUMBER</label>
-            <input type="tel" id="depositWhatsapp" placeholder="Enter WhatsApp number">
-
-            <button type="button" class="submit-btn" id="depositSubmitBtn" onclick="submitDeposit()">
-                SUBMIT DEPOSIT REQUEST
-            </button>
-        </div>
-    </div>
-</section>
-
-<!-- WITHDRAWAL PAGE -->
-<section id="withdrawPage" class="page">
-    <div class="container">
-        <div class="page-header">
-            <small>WITHDRAWAL</small>
-            <h1>Withdrawal Request</h1>
-            <p>Withdrawal request එක සඳහා ඔබගේ details ඇතුළත් කරන්න.</p>
-        </div>
-
-        <div class="form-card">
-            <label>NAME</label>
-            <input type="text" id="withdrawName" placeholder="Enter your name">
-
-            <label>GAME ID</label>
-            <input type="text" id="withdrawGameId" placeholder="Enter your Game ID">
-
-            <label>WITHDRAWAL AMOUNT</label>
-            <input type="number" id="withdrawAmount" placeholder="Enter withdrawal amount">
-
-            <label>WHATSAPP NUMBER</label>
-            <input type="tel" id="withdrawWhatsapp" placeholder="Enter WhatsApp number">
-
-            <label>PAYMENT / BANK DETAILS</label>
-            <input type="text" id="withdrawDetails" placeholder="Enter payment details">
-
-            <button type="button" class="submit-btn" id="withdrawSubmitBtn" onclick="submitWithdrawal()">
-                SUBMIT WITHDRAWAL REQUEST
-            </button>
-        </div>
-    </div>
-</section>
-
-<!-- SETTINGS PAGE -->
-<section id="settingsPage" class="page">
-    <div class="container">
-        <div class="page-header">
-            <small>SETTINGS</small>
-            <h1>Settings</h1>
-            <p>Account සහ support options.</p>
-        </div>
-
-        <div class="settings-list">
-            <div class="setting-item">
-                <div class="setting-icon">👤</div>
-                <div class="setting-info">
-                    <h3>Account</h3>
-                    <p id="settingsEmail">User Email</p>
+                <div class="slide" style="background-image:url('https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&amp;fit=crop&amp;w=1200&amp;q=80');">
+                    <div class="slide-content">
+                        <small>EASY WITHDRAWAL</small>
+                        <h2>Quick<br>Withdrawal</h2>
+                        <p>Send your withdrawal request through our agent.</p>
+                    </div>
+                </div>
+                <div class="slide" style="background-image:url('https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&amp;fit=crop&amp;w=1200&amp;q=80');">
+                    <div class="slide-content">
+                        <small>24 / 7 SUPPORT</small>
+                        <h2>Agent<br>Support</h2>
+                        <p>Get assistance whenever you need it.</p>
+                    </div>
+                </div>
+                <div class="slider-dots">
+                    <span class="slider-dot active"></span>
+                    <span class="slider-dot"></span>
+                    <span class="slider-dot"></span>
                 </div>
             </div>
 
-            <button type="button" class="setting-item action" onclick="openWhatsApp()">
-                <div class="setting-icon">☎</div>
-                <div class="setting-info">
-                    <h3>Agent Support</h3>
-                    <p>Contact WhatsApp support</p>
-                </div>
-            </button>
+            <!-- QUICK ACTIONS -->
+            <div class="quick-actions">
+                <button class="quick-card" onclick="showPage('deposit')">
+                    <div class="quick-icon">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M12 16V8"/><path d="M9 11l3-3 3 3"/></svg>
+                    </div>
+                    <h3>Deposit</h3>
+                    <p>Submit payment receipt</p>
+                </button>
 
-            <button type="button" class="setting-item action" onclick="firebaseLogout()">
-                <div class="setting-icon">↪</div>
-                <div class="setting-info">
-                    <h3>Logout</h3>
-                    <p>Sign out from this device</p>
+                <button class="quick-card" onclick="showPage('withdraw')">
+                    <div class="quick-icon">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M12 8v8"/><path d="M9 13l3 3 3-3"/></svg>
+                    </div>
+                    <h3>Withdrawal</h3>
+                    <p>Request withdrawal</p>
+                </button>
+            </div>
+
+            <!-- USER DETAILS CARD -->
+            <div class="user-card">
+                <div>
+                    <strong id="userName">Loading...</strong>
+                    <small id="userEmail">Loading...</small>
                 </div>
-            </button>
+                <button type="button" class="logout-btn" onclick="firebaseLogout()">Logout</button>
+            </div>
+
+            <div class="notice">
+                This is an independent agent service and is not the official 888Starz website.
+            </div>
         </div>
-    </div>
-</section>
+    </section>
 
+    <!-- DEPOSIT PAGE -->
+    <section id="depositPage" class="page">
+        <div class="container">
+            <div class="page-header">
+                <small>DEPOSIT</small>
+                <h1>Deposit Request</h1>
+                <p>Payment receipt එක upload කරලා පහත details සම්පූර්ණ කරන්න.</p>
+            </div>
+
+            <div class="form-card">
+                <div class="form-group">
+                    <label>PAYMENT RECEIPT</label>
+                    <div class="upload-box">
+                        <img id="receiptPreview" class="receipt-preview" alt="Receipt Preview">
+                        <div id="uploadContent">
+                            <div class="upload-icon">
+                                <svg viewBox="0 0 24 24"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M5 14v4 a2 2 0 0 0 2 2 h10 a2 2 0 0 0 2-2 v-4"/></svg>
+                            </div>
+                            <strong>Upload Receipt</strong>
+                            <span>JPG / PNG / WEBP</span>
+                        </div>
+                        <input type="file" id="receipt" accept="image/*">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>DEPOSIT AMOUNT</label>
+                    <input type="number" id="depositAmount" placeholder="Enter deposit amount" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label>NAME</label>
+                    <input type="text" id="depositName" placeholder="Enter your name">
+                </div>
+
+                <div class="form-group">
+                    <label>GAME ID</label>
+                    <input type="text" id="gameId" placeholder="Enter your Game ID">
+                </div>
+
+                <div class="form-group">
+                    <label>WHATSAPP NUMBER</label>
+                    <input type="tel" id="depositWhatsapp" placeholder="Enter WhatsApp number">
+                </div>
+
+                <button class="submit-btn" id="depositSubmitBtn" onclick="submitDeposit()">
+                    SUBMIT DEPOSIT REQUEST
+                </button>
+            </div>
+
+            <div class="notice">
+                Please verify the payment account details with the agent before making a payment.
+            </div>
+        </div>
+    </section>
+
+    <!-- WITHDRAWAL PAGE -->
+    <section id="withdrawPage" class="page">
+        <div class="container">
+            <div class="page-header">
+                <small>WITHDRAWAL</small>
+                <h1>Withdrawal Request</h1>
+                <p>Withdrawal request එක සඳහා ඔබගේ details ඇතුළත් කරන්න.</p>
+            </div>
+
+            <div class="withdraw-info">
+                <div class="withdraw-info-icon">!</div>
+                <div>
+                    <h4>Important</h4>
+                    <p>Withdrawal details submit කිරීමට පෙර සියලුම තොරතුරු නිවැරදි බව තහවුරු කරන්න.</p>
+                </div>
+            </div>
+
+            <div class="form-card">
+                <div class="form-group">
+                    <label>NAME</label>
+                    <input type="text" id="withdrawName" placeholder="Enter your name">
+                </div>
+
+                <div class="form-group">
+                    <label>GAME ID</label>
+                    <input type="text" id="withdrawGameId" placeholder="Enter your Game ID">
+                </div>
+
+                <div class="form-group">
+                    <label>WITHDRAWAL AMOUNT</label>
+                    <input type="number" id="withdrawAmount" placeholder="Enter withdrawal amount" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label>WHATSAPP NUMBER</label>
+                    <input type="tel" id="withdrawWhatsapp" placeholder="Enter WhatsApp number">
+                </div>
+
+                <div class="form-group">
+                    <label>PAYMENT / BANK DETAILS</label>
+                    <input type="text" id="withdrawDetails" placeholder="Enter payment details">
+                </div>
+
+                <button class="submit-btn" id="withdrawSubmitBtn" onclick="submitWithdrawal()">
+                    SUBMIT WITHDRAWAL REQUEST
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- SETTINGS PAGE -->
+    <section id="settingsPage" class="page">
+        <div class="container">
+            <div class="page-header">
+                <small>SETTINGS</small>
+                <h1>Settings</h1>
+                <p>Application settings සහ support options.</p>
+            </div>
+
+            <div class="settings-list">
+                <div class="setting-item">
+                    <div class="setting-icon">
+                        <svg viewBox="0 0 24 24"><path d="M18 8 a6 6 0 0 0-12 0 c0 7-3 7-3 9 h18 c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+                    </div>
+                    <div class="setting-info">
+                        <h3>Notifications</h3>
+                        <p>Receive transaction updates</p>
+                    </div>
+                    <button class="toggle on" onclick="toggleSetting(this)"></button>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-icon">
+                        <svg viewBox="0 0 24 24"><path d="M21 15.5 A9 9 0 1 1 8.5 3 A7 7 0 0 0 21 15.5Z"/></svg>
+                    </div>
+                    <div class="setting-info">
+                        <h3>Dark Mode</h3>
+                        <p>Premium dark interface</p>
+                    </div>
+                    <button class="toggle on" onclick="toggleSetting(this)"></button>
+                </div>
+
+                <div class="setting-item" onclick="openWhatsApp()" style="cursor:pointer">
+                    <div class="setting-icon">
+                        <svg viewBox="0 0 24 24"><path d="M20 11.5 a8 8 0 0 1-11.5 7.2 L4 20l1.3-4.2 A8 8 0 1 1 20 11.5Z"/><path d="M8.5 9.5 c.3-.5.6-.5.9-.1 l.8 1 c.2.2.2.5 0 .8 l-.5.6 c.7 1.1 1.5 1.8 2.7 2.3 l.5-.5 c.2-.2.5-.2.8 0 l1 .7 c.4.3.3.6 0 .9"/></svg>
+                    </div>
+                    <div class="setting-info">
+                        <h3>Agent Support</h3>
+                        <p>Contact WhatsApp support</p>
+                    </div>
+                    <div class="setting-arrow">→</div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-icon">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/></svg>
+                    </div>
+                    <div class="setting-info">
+                        <h3>About</h3>
+                        <p id="settingsEmail">Independent Agent Service</p>
+                    </div>
+                    <div class="setting-arrow">→</div>
+                </div>
+            </div>
+
+            <div class="notice">
+                888Starz is a third-party betting platform. This page represents an independent agent service and is not the official 888Starz website.
+            </div>
+        </div>
+    </section>
 </main>
 
-<!-- WHATSAPP BUTTON -->
-<a href="https://wa.me/94702883324" class="whatsapp" target="_blank">☎</a>
+<!-- WHATSAPP FLOAT -->
+<a href="https://wa.me/94702883324" class="whatsapp" target="_blank" rel="noopener" aria-label="WhatsApp">
+    <svg viewBox="0 0 24 24">
+        <path d="M20 11.5 a8 8 0 0 1-11.5 7.2 L4 20l1.3-4.2 A8 8 0 1 1 20 11.5Z"/>
+        <path d="M8.5 9.5 c.3-.5.6-.5.9-.1 l.8 1 c.2.2.2.5 0 .8 l-.5.6 c.7 1.1 1.5 1.8 2.7 2.3 l.5-.5 c.2-.2.5-.2.8 0 l1 .7 c.4.3.3.6 0 .9"/>
+    </svg>
+</a>
 
 <!-- BOTTOM NAVIGATION -->
 <nav class="bottom-nav">
-    <button type="button" class="nav-btn active" data-page="home" onclick="showPage('home')">
-        <span class="nav-symbol">⌂</span>
+    <button class="nav-btn active" data-page="home" onclick="showPage('home')">
+        <span class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-7h6v7"/></svg></span>
         <span>Home</span>
     </button>
-    <button type="button" class="nav-btn" data-page="deposit" onclick="showPage('deposit')">
-        <span class="nav-symbol">↑</span>
+    <button class="nav-btn" data-page="deposit" onclick="showPage('deposit')">
+        <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M12 16V8"/><path d="M9 11l3-3 3 3"/></svg></span>
         <span>Deposit</span>
     </button>
-    <button type="button" class="nav-btn" data-page="withdraw" onclick="showPage('withdraw')">
-        <span class="nav-symbol">↓</span>
+    <button class="nav-btn" data-page="withdraw" onclick="showPage('withdraw')">
+        <span class="nav-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M12 8v8"/><path d="M9 13l3 3 3-3"/></svg></span>
         <span>Withdrawal</span>
     </button>
-    <button type="button" class="nav-btn" data-page="settings" onclick="showPage('settings')">
-        <span class="nav-symbol">⚙</span>
+    <button class="nav-btn" data-page="settings" onclick="showPage('settings')">
+        <span class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15 a1.7 1.7 0 0 0 .3 1.9 l.1.1-1.7 1.7-.1-.1 a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V20 h-2.4v-.1 a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3 l-.1.1-1.7-1.7.1-.1 a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H6 v-2.4h.1 a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9 l-.1-.1 1.7-1.7.1.1 a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6V4 h2.4v.1 a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3 l.1-.1 1.7 1.7-.1.1 a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1H20 v2.4h-.1 a1.7 1.7 0 0 0-1.5 1.6z"/></svg></span>
         <span>Setting</span>
     </button>
 </nav>
 
+<!-- TOAST -->
 <div id="toast" class="toast"></div>
 
-<!-- JS -->
+<!-- JS SCRIPTS -->
 <script type="module" src="js/firebase.js"></script>
 <script type="module" src="js/app.js"></script>
 </body>

@@ -113,16 +113,16 @@ function setLanguage(lang) {
     const heroTitle = document.getElementById("mainHeroTitle");
     if (heroTitle) heroTitle.innerHTML = t.heroTitle;
 
-    document.getElementById("depositAmount").placeholder = t.phAmount;
-    document.getElementById("depositName").placeholder = t.phName;
-    document.getElementById("gameId").placeholder = t.phGameId;
-    document.getElementById("depositWhatsapp").placeholder = t.phWhatsapp;
+    if (document.getElementById("depositAmount")) document.getElementById("depositAmount").placeholder = t.phAmount;
+    if (document.getElementById("depositName")) document.getElementById("depositName").placeholder = t.phName;
+    if (document.getElementById("gameId")) document.getElementById("gameId").placeholder = t.phGameId;
+    if (document.getElementById("depositWhatsapp")) document.getElementById("depositWhatsapp").placeholder = t.phWhatsapp;
 
-    document.getElementById("withdrawName").placeholder = t.phName;
-    document.getElementById("withdrawGameId").placeholder = t.phGameId;
-    document.getElementById("withdrawAmount").placeholder = t.phWAmount;
-    document.getElementById("withdrawWhatsapp").placeholder = t.phWhatsapp;
-    document.getElementById("withdrawDetails").placeholder = t.phDetails;
+    if (document.getElementById("withdrawName")) document.getElementById("withdrawName").placeholder = t.phName;
+    if (document.getElementById("withdrawGameId")) document.getElementById("withdrawGameId").placeholder = t.phGameId;
+    if (document.getElementById("withdrawAmount")) document.getElementById("withdrawAmount").placeholder = t.phWAmount;
+    if (document.getElementById("withdrawWhatsapp")) document.getElementById("withdrawWhatsapp").placeholder = t.phWhatsapp;
+    if (document.getElementById("withdrawDetails")) document.getElementById("withdrawDetails").placeholder = t.phDetails;
 
     document.querySelectorAll(".lang-option-card").forEach(card => {
         const input = card.querySelector("input");
@@ -191,6 +191,45 @@ function renderUserInfo(user) {
         if (emailEl) emailEl.textContent = cachedEmail || "Not Logged In";
         if (avatarTextEl) avatarTextEl.textContent = initial;
         if (settingAvatarText) settingAvatarText.textContent = initial;
+    }
+}
+
+// Telegram Alert Function with CORS Fallback
+async function sendTelegramAlert(textMessage) {
+    const directUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    const proxyUrl = `https://corsproxy.io/?` + encodeURIComponent(directUrl);
+
+    const payload = {
+        chat_id: TELEGRAM_CHAT_ID,
+        text: textMessage,
+        parse_mode: "Markdown"
+    };
+
+    try {
+        // Direct Call පළමුව උත්සාහ කරයි
+        let res = await fetch(directUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        // CORS Block වුවහොත් Proxy එකෙන් යවයි
+        if (!res.ok) {
+            res = await fetch(proxyUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+        }
+        return await res.json();
+    } catch (e) {
+        // Exception ආවොත් Proxy හරහා යවයි
+        const res = await fetch(proxyUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+        return await res.json();
     }
 }
 
@@ -294,7 +333,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // DEPOSIT SUBMIT WITH TELEGRAM BOT INTEGRATION
+    // DEPOSIT SUBMIT WITH FIREBASE AND TELEGRAM
     const depositSubmitBtn = document.getElementById("depositSubmitBtn");
     if (depositSubmitBtn) {
         depositSubmitBtn.addEventListener("click", async () => {
@@ -318,7 +357,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const userId = user ? user.uid : "guest";
                 
-                // 1. Firebase Storage Upload
+                // 1. Storage Upload
                 const fileRef = ref(storage, `receipts/${userId}/${Date.now()}_${file.name}`);
                 await uploadBytes(fileRef, file);
                 const receiptURL = await getDownloadURL(fileRef);
@@ -328,7 +367,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     userId, name, gameId, whatsapp, amount: Number(amount), receiptURL, status: "pending", createdAt: serverTimestamp()
                 });
 
-                // 3. Telegram Message (sendMessage භාවිතා කර ඇත)
+                // 3. Telegram Message Notification
                 const textMessage = `📌 *NEW DEPOSIT REQUEST*\n\n` +
                                     `👤 *Name:* ${name}\n` +
                                     `🎮 *Game ID:* ${gameId}\n` +
@@ -338,24 +377,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                     `⏰ *Time:* ${new Date().toLocaleString()}\n\n` +
                                     `🧾 *Receipt Link:* ${receiptURL}`;
 
-                const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-                
-                const response = await fetch(telegramUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        chat_id: TELEGRAM_CHAT_ID,
-                        text: textMessage,
-                        parse_mode: "Markdown"
-                    })
-                });
-
-                const resData = await response.json();
-
-                if (!resData.ok) {
-                    console.error("Telegram Error Response:", resData);
-                    throw new Error(resData.description || "Telegram notification failed");
-                }
+                await sendTelegramAlert(textMessage);
 
                 showToast(t.msgDepSuccess);
                 showPage("home");
@@ -366,8 +388,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("gameId").value = "";
                 document.getElementById("depositWhatsapp").value = "";
                 document.getElementById("receipt").value = "";
-                document.getElementById("receiptPreview").style.display = "none";
-                document.getElementById("uploadContent").style.display = "flex";
+                if(document.getElementById("receiptPreview")) document.getElementById("receiptPreview").style.display = "none";
+                if(document.getElementById("uploadContent")) document.getElementById("uploadContent").style.display = "flex";
 
             } catch (err) {
                 console.error("Error submitting deposit:", err);
@@ -379,7 +401,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // WITHDRAW SUBMIT WITH TELEGRAM BOT INTEGRATION
+    // WITHDRAW SUBMIT WITH FIREBASE AND TELEGRAM
     const withdrawSubmitBtn = document.getElementById("withdrawSubmitBtn");
     if (withdrawSubmitBtn) {
         withdrawSubmitBtn.addEventListener("click", async () => {
@@ -417,17 +439,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                     `🆔 *User ID:* ${userId}\n` +
                                     `⏰ *Time:* ${new Date().toLocaleString()}`;
 
-                const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-
-                await fetch(telegramUrl, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        chat_id: TELEGRAM_CHAT_ID,
-                        text: textMessage,
-                        parse_mode: "Markdown"
-                    })
-                });
+                await sendTelegramAlert(textMessage);
 
                 showToast(t.msgWSuccess);
                 showPage("home");

@@ -46,7 +46,7 @@ const translations = {
         phAmount: "Enter deposit amount", phName: "Enter your name", phGameId: "Enter your Game ID", phWhatsapp: "Enter WhatsApp number",
         phWAmount: "Enter withdrawal amount", phDetails: "Enter payment details",
         msgFillAll: "Please fill all fields and upload receipt.", msgDepSuccess: "Deposit request submitted successfully!",
-        msgFillAllW: "Please fill all fields.", msgWSuccess: "Withdrawal request submitted successfully!"
+        msgFillAllW: "Please fill all required fields.", msgWSuccess: "Withdrawal request submitted successfully!"
     },
     si: {
         subHeader: "ස්වාධීන නියෝජිත සේවාව",
@@ -149,7 +149,7 @@ function initTheme() {
     }
 }
 
-// SAFE SUCCESS NOTIFICATION SOUND
+// SUCCESS NOTIFICATION AUDIO
 function playSuccessSound() {
     try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -176,18 +176,40 @@ function playSuccessSound() {
         osc.start();
         osc.stop(ctx.currentTime + 0.35);
     } catch (e) {
-        console.warn("Audio Context Error suppressed:", e);
+        console.warn("Audio suppressed:", e);
     }
 }
 
-// SUCCESS TOAST NOTIFICATION
-function showToast(message) {
-    playSuccessSound();
-    const toast = document.getElementById("toast");
-    if (toast) {
-        toast.textContent = message;
-        toast.classList.add("show");
-        setTimeout(() => toast.classList.remove("show"), 3500);
+// UNIVERSAL DYNAMIC MODAL POPUP (NO DEFAULT ALERTS)
+let isSuccessAction = false;
+
+function showCustomModal(title, message, type = "success") {
+    isSuccessAction = (type === "success");
+
+    if (type === "success") {
+        playSuccessSound();
+    }
+
+    const popup = document.getElementById("successPopup");
+    const popupTitle = document.getElementById("popupTitle");
+    const popupMsg = document.getElementById("popupMessage");
+    const popupIcon = popup.querySelector(".popup-icon");
+
+    if (popup && popupMsg && popupTitle) {
+        popupTitle.textContent = title;
+        popupMsg.textContent = message;
+
+        if (type === "error") {
+            popupIcon.style.background = "rgba(255, 77, 77, 0.15)";
+            popupIcon.style.color = "#ff4d4d";
+            popupIcon.innerHTML = `<svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+        } else {
+            popupIcon.style.background = "rgba(32, 214, 107, 0.15)";
+            popupIcon.style.color = "var(--green)";
+            popupIcon.innerHTML = `<svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        }
+
+        popup.classList.add("show");
     }
 }
 
@@ -288,6 +310,18 @@ document.addEventListener("DOMContentLoaded", () => {
     setLanguage(currentLang);
     renderUserInfo(auth.currentUser);
 
+    // POPUP CLOSE HANDLER
+    const popupCloseBtn = document.getElementById("popupCloseBtn");
+    if (popupCloseBtn) {
+        popupCloseBtn.addEventListener("click", () => {
+            const popup = document.getElementById("successPopup");
+            if (popup) popup.classList.remove("show");
+            if (isSuccessAction) {
+                showPage("home");
+            }
+        });
+    }
+
     const toggleThemeBtn = document.getElementById("toggleThemeBtn");
     if (toggleThemeBtn) {
         toggleThemeBtn.addEventListener("click", () => {
@@ -383,7 +417,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // DEPOSIT SUBMIT (GUARANTEED SUCCESS FLOW)
+    // DEPOSIT SUBMIT (NO DEFAULT ALERTS)
     const depositSubmitBtn = document.getElementById("depositSubmitBtn");
     if (depositSubmitBtn) {
         depositSubmitBtn.addEventListener("click", async () => {
@@ -397,7 +431,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const file = fileInput ? fileInput.files[0] : null;
 
             if (!file || !amount || !name || !gameId || !whatsapp) {
-                alert(t.msgFillAll);
+                showCustomModal("Attention", t.msgFillAll, "error");
                 return;
             }
 
@@ -414,15 +448,10 @@ document.addEventListener("DOMContentLoaded", () => {
                             `⏰ *Time:* ${new Date().toLocaleString()}`;
 
             try {
-                // Telegram එකට සාර්ථකව Send වීම
                 await sendTelegramPhoto(file, caption);
             } catch (telegramErr) {
                 console.warn("Telegram Upload Warning:", telegramErr);
             } finally {
-                // Telegram එකට ගිය පසු හෝ ඕනෑම අවස්ථාවක UI එක Reset වී User ට Alert එක යයි
-                alert(t.msgDepSuccess);
-                showToast(t.msgDepSuccess);
-                
                 document.getElementById("depositAmount").value = "";
                 document.getElementById("depositName").value = "";
                 document.getElementById("gameId").value = "";
@@ -433,12 +462,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 depositSubmitBtn.disabled = false;
                 depositSubmitBtn.textContent = t.btnSubmitDeposit;
-                showPage("home");
+                
+                showCustomModal("Success!", t.msgDepSuccess, "success");
             }
         });
     }
 
-    // WITHDRAW SUBMIT (GUARANTEED SUCCESS FLOW)
+    // WITHDRAW SUBMIT (NO DEFAULT ALERTS)
     const withdrawSubmitBtn = document.getElementById("withdrawSubmitBtn");
     if (withdrawSubmitBtn) {
         withdrawSubmitBtn.addEventListener("click", async () => {
@@ -451,7 +481,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const details = document.getElementById("withdrawDetails").value.trim();
 
             if (!name || !gameId || !amount || !whatsapp || !details) {
-                alert(t.msgFillAllW);
+                showCustomModal("Attention", t.msgFillAllW, "error");
                 return;
             }
 
@@ -473,9 +503,6 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (err) {
                 console.warn("Telegram text warning:", err);
             } finally {
-                alert(t.msgWSuccess);
-                showToast(t.msgWSuccess);
-
                 document.getElementById("withdrawName").value = "";
                 document.getElementById("withdrawGameId").value = "";
                 document.getElementById("withdrawAmount").value = "";
@@ -484,7 +511,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 withdrawSubmitBtn.disabled = false;
                 withdrawSubmitBtn.textContent = t.btnSubmitWithdraw;
-                showPage("home");
+
+                showCustomModal("Success!", t.msgWSuccess, "success");
             }
         });
     }

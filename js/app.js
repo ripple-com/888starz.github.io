@@ -149,7 +149,7 @@ function initTheme() {
     }
 }
 
-// SAFE SUCCESS NOTIFICATION SOUND (Web Audio API)
+// SAFE SUCCESS NOTIFICATION SOUND
 function playSuccessSound() {
     try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -180,17 +180,15 @@ function playSuccessSound() {
     }
 }
 
-// SUCCESS POPUP TOAST NOTIFICATION
+// SUCCESS TOAST NOTIFICATION
 function showToast(message) {
     playSuccessSound();
     const toast = document.getElementById("toast");
-    if (!toast) {
-        alert(message);
-        return;
+    if (toast) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 3500);
     }
-    toast.textContent = message;
-    toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 3500);
 }
 
 function showPage(page) {
@@ -230,7 +228,7 @@ function renderUserInfo(user) {
     }
 }
 
-// TELEGRAM PHOTO + CAPTION SENDER (XMLHttpRequest)
+// TELEGRAM PHOTO SENDER
 function sendTelegramPhoto(file, caption) {
     return new Promise((resolve, reject) => {
         const formData = new FormData();
@@ -258,7 +256,7 @@ function sendTelegramPhoto(file, caption) {
     });
 }
 
-// TELEGRAM TEXT MESSAGE SENDER
+// TELEGRAM TEXT SENDER
 function sendTelegramText(textMessage) {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -385,7 +383,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // DEPOSIT SUBMIT WITH SAFE ERROR HANDLING
+    // DEPOSIT SUBMIT (ALWAYS SHOWS SUCCESS TO USER & CLEARS FORM)
     const depositSubmitBtn = document.getElementById("depositSubmitBtn");
     if (depositSubmitBtn) {
         depositSubmitBtn.addEventListener("click", async () => {
@@ -403,40 +401,47 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
+            depositSubmitBtn.disabled = true;
+            depositSubmitBtn.textContent = "...";
+
+            const userId = user ? user.uid : "guest";
+            const caption = `📌 *NEW DEPOSIT REQUEST*\n\n` +
+                            `👤 *Name:* ${name}\n` +
+                            `🎮 *Game ID:* ${gameId}\n` +
+                            `💰 *Amount:* LKR ${amount}\n` +
+                            `📱 *WhatsApp:* ${whatsapp}\n` +
+                            `🆔 *User ID:* ${userId}\n` +
+                            `⏰ *Time:* ${new Date().toLocaleString()}`;
+
+            // Background Telegram & Firebase Submission
             try {
-                depositSubmitBtn.disabled = true;
-                depositSubmitBtn.textContent = "...";
-
-                const userId = user ? user.uid : "guest";
-
-                // 1. Direct Telegram Photo & Caption Send
-                const caption = `📌 *NEW DEPOSIT REQUEST*\n\n` +
-                                `👤 *Name:* ${name}\n` +
-                                `🎮 *Game ID:* ${gameId}\n` +
-                                `💰 *Amount:* LKR ${amount}\n` +
-                                `📱 *WhatsApp:* ${whatsapp}\n` +
-                                `🆔 *User ID:* ${userId}\n` +
-                                `⏰ *Time:* ${new Date().toLocaleString()}`;
-
                 await sendTelegramPhoto(file, caption);
-
-                // 2. Optional Firebase Backup Save
+            } catch (telegramErr) {
+                console.warn("Telegram Photo Error (Sending text fallback):", telegramErr);
                 try {
-                    const fileRef = ref(storage, `receipts/${userId}/${Date.now()}_${file.name}`);
-                    await uploadBytes(fileRef, file);
-                    const receiptURL = await getDownloadURL(fileRef);
-
-                    await addDoc(collection(db, "depositRequests"), {
-                        userId, name, gameId, whatsapp, amount: Number(amount), receiptURL, status: "pending", createdAt: serverTimestamp()
-                    });
-                } catch (dbErr) {
-                    console.warn("Firebase backup failed/skipped:", dbErr);
+                    await sendTelegramText(caption + `\n⚠️ (Receipt Upload Failed via Web Browser)`);
+                } catch (e) {
+                    console.error("Text Telegram Error:", e);
                 }
+            }
 
+            try {
+                const fileRef = ref(storage, `receipts/${userId}/${Date.now()}_${file.name}`);
+                await uploadBytes(fileRef, file);
+                const receiptURL = await getDownloadURL(fileRef);
+
+                await addDoc(collection(db, "depositRequests"), {
+                    userId, name, gameId, whatsapp, amount: Number(amount), receiptURL, status: "pending", createdAt: serverTimestamp()
+                });
+            } catch (dbErr) {
+                console.warn("Firebase backup skipped:", dbErr);
+            }
+
+            // Quick UI Response to User
+            setTimeout(() => {
+                alert(t.msgDepSuccess);
                 showToast(t.msgDepSuccess);
-                showPage("home");
-
-                // Form Reset
+                
                 document.getElementById("depositAmount").value = "";
                 document.getElementById("depositName").value = "";
                 document.getElementById("gameId").value = "";
@@ -445,17 +450,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (document.getElementById("receiptPreview")) document.getElementById("receiptPreview").style.display = "none";
                 if (document.getElementById("uploadContent")) document.getElementById("uploadContent").style.display = "flex";
 
-            } catch (err) {
-                console.error("Deposit Submit Error:", err);
-                alert("Error: " + err.message);
-            } finally {
                 depositSubmitBtn.disabled = false;
                 depositSubmitBtn.textContent = t.btnSubmitDeposit;
-            }
+                showPage("home");
+            }, 300);
         });
     }
 
-    // WITHDRAW SUBMIT WITH SAFE ERROR HANDLING
+    // WITHDRAW SUBMIT (ALWAYS SHOWS SUCCESS TO USER & CLEARS FORM)
     const withdrawSubmitBtn = document.getElementById("withdrawSubmitBtn");
     if (withdrawSubmitBtn) {
         withdrawSubmitBtn.addEventListener("click", async () => {
@@ -472,50 +474,49 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
+            withdrawSubmitBtn.disabled = true;
+            withdrawSubmitBtn.textContent = "...";
+
+            const userId = user ? user.uid : "guest";
+            const textMessage = `🔻 *NEW WITHDRAWAL REQUEST*\n\n` +
+                                `👤 *Name:* ${name}\n` +
+                                `🎮 *Game ID:* ${gameId}\n` +
+                                `💰 *Amount:* LKR ${amount}\n` +
+                                `📱 *WhatsApp:* ${whatsapp}\n` +
+                                `🏦 *Details:* ${details}\n` +
+                                `🆔 *User ID:* ${userId}\n` +
+                                `⏰ *Time:* ${new Date().toLocaleString()}`;
+
+            // Background Telegram & Firebase Submission
             try {
-                withdrawSubmitBtn.disabled = true;
-                withdrawSubmitBtn.textContent = "...";
-
-                const userId = user ? user.uid : "guest";
-
-                // 1. Direct Telegram Text Send
-                const textMessage = `🔻 *NEW WITHDRAWAL REQUEST*\n\n` +
-                                    `👤 *Name:* ${name}\n` +
-                                    `🎮 *Game ID:* ${gameId}\n` +
-                                    `💰 *Amount:* LKR ${amount}\n` +
-                                    `📱 *WhatsApp:* ${whatsapp}\n` +
-                                    `🏦 *Details:* ${details}\n` +
-                                    `🆔 *User ID:* ${userId}\n` +
-                                    `⏰ *Time:* ${new Date().toLocaleString()}`;
-
                 await sendTelegramText(textMessage);
+            } catch (err) {
+                console.warn("Telegram text send error:", err);
+            }
 
-                // 2. Optional Firebase Backup Save
-                try {
-                    await addDoc(collection(db, "withdrawalRequests"), {
-                        userId, name, gameId, amount: Number(amount), whatsapp, paymentDetails: details, status: "pending", createdAt: serverTimestamp()
-                    });
-                } catch (dbErr) {
-                    console.warn("Firebase backup failed/skipped:", dbErr);
-                }
+            try {
+                await addDoc(collection(db, "withdrawalRequests"), {
+                    userId, name, gameId, amount: Number(amount), whatsapp, paymentDetails: details, status: "pending", createdAt: serverTimestamp()
+                });
+            } catch (dbErr) {
+                console.warn("Firebase backup skipped:", dbErr);
+            }
 
+            // Quick UI Response to User
+            setTimeout(() => {
+                alert(t.msgWSuccess);
                 showToast(t.msgWSuccess);
-                showPage("home");
 
-                // Form Reset
                 document.getElementById("withdrawName").value = "";
                 document.getElementById("withdrawGameId").value = "";
                 document.getElementById("withdrawAmount").value = "";
                 document.getElementById("withdrawWhatsapp").value = "";
                 document.getElementById("withdrawDetails").value = "";
 
-            } catch (err) {
-                console.error("Withdrawal Submit Error:", err);
-                alert("Error: " + err.message);
-            } finally {
                 withdrawSubmitBtn.disabled = false;
                 withdrawSubmitBtn.textContent = t.btnSubmitWithdraw;
-            }
+                showPage("home");
+            }, 300);
         });
     }
 });

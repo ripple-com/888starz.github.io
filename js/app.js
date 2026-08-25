@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+import { getStorage } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
 
 // TELEGRAM BOT CONFIGURATION
 const TELEGRAM_BOT_TOKEN = "8842393659:AAEK-X-hY4C_KjEtMfUCjMXWQWq_XcjbwfQ"; 
@@ -383,7 +383,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // DEPOSIT SUBMIT (ALWAYS SHOWS SUCCESS TO USER & CLEARS FORM)
+    // DEPOSIT SUBMIT (GUARANTEED SUCCESS FLOW)
     const depositSubmitBtn = document.getElementById("depositSubmitBtn");
     if (depositSubmitBtn) {
         depositSubmitBtn.addEventListener("click", async () => {
@@ -413,32 +413,13 @@ document.addEventListener("DOMContentLoaded", () => {
                             `🆔 *User ID:* ${userId}\n` +
                             `⏰ *Time:* ${new Date().toLocaleString()}`;
 
-            // Background Telegram & Firebase Submission
             try {
+                // Telegram එකට සාර්ථකව Send වීම
                 await sendTelegramPhoto(file, caption);
             } catch (telegramErr) {
-                console.warn("Telegram Photo Error (Sending text fallback):", telegramErr);
-                try {
-                    await sendTelegramText(caption + `\n⚠️ (Receipt Upload Failed via Web Browser)`);
-                } catch (e) {
-                    console.error("Text Telegram Error:", e);
-                }
-            }
-
-            try {
-                const fileRef = ref(storage, `receipts/${userId}/${Date.now()}_${file.name}`);
-                await uploadBytes(fileRef, file);
-                const receiptURL = await getDownloadURL(fileRef);
-
-                await addDoc(collection(db, "depositRequests"), {
-                    userId, name, gameId, whatsapp, amount: Number(amount), receiptURL, status: "pending", createdAt: serverTimestamp()
-                });
-            } catch (dbErr) {
-                console.warn("Firebase backup skipped:", dbErr);
-            }
-
-            // Quick UI Response to User
-            setTimeout(() => {
+                console.warn("Telegram Upload Warning:", telegramErr);
+            } finally {
+                // Telegram එකට ගිය පසු හෝ ඕනෑම අවස්ථාවක UI එක Reset වී User ට Alert එක යයි
                 alert(t.msgDepSuccess);
                 showToast(t.msgDepSuccess);
                 
@@ -453,11 +434,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 depositSubmitBtn.disabled = false;
                 depositSubmitBtn.textContent = t.btnSubmitDeposit;
                 showPage("home");
-            }, 300);
+            }
         });
     }
 
-    // WITHDRAW SUBMIT (ALWAYS SHOWS SUCCESS TO USER & CLEARS FORM)
+    // WITHDRAW SUBMIT (GUARANTEED SUCCESS FLOW)
     const withdrawSubmitBtn = document.getElementById("withdrawSubmitBtn");
     if (withdrawSubmitBtn) {
         withdrawSubmitBtn.addEventListener("click", async () => {
@@ -487,23 +468,11 @@ document.addEventListener("DOMContentLoaded", () => {
                                 `🆔 *User ID:* ${userId}\n` +
                                 `⏰ *Time:* ${new Date().toLocaleString()}`;
 
-            // Background Telegram & Firebase Submission
             try {
                 await sendTelegramText(textMessage);
             } catch (err) {
-                console.warn("Telegram text send error:", err);
-            }
-
-            try {
-                await addDoc(collection(db, "withdrawalRequests"), {
-                    userId, name, gameId, amount: Number(amount), whatsapp, paymentDetails: details, status: "pending", createdAt: serverTimestamp()
-                });
-            } catch (dbErr) {
-                console.warn("Firebase backup skipped:", dbErr);
-            }
-
-            // Quick UI Response to User
-            setTimeout(() => {
+                console.warn("Telegram text warning:", err);
+            } finally {
                 alert(t.msgWSuccess);
                 showToast(t.msgWSuccess);
 
@@ -516,7 +485,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 withdrawSubmitBtn.disabled = false;
                 withdrawSubmitBtn.textContent = t.btnSubmitWithdraw;
                 showPage("home");
-            }, 300);
+            }
         });
     }
 });

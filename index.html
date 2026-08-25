@@ -1,48 +1,228 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>888STARZ AGENT</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>888Starz Agent | Deposit & Withdrawal</title>
+<style>
+*{ margin:0; padding:0; box-sizing:border-box; }
+
+/* THEME VARIABLES */
+:root {
+    --orange: #ff6900;
+    --orange2: #ff9200;
+    --bg: #070707;
+    --card: #111214;
+    --card2: #18191c;
+    --text: #ffffff;
+    --muted: #85888f;
+    --line: rgba(255, 255, 255, 0.08);
+    --green: #20d66b;
+    --header-bg: rgba(7, 7, 7, 0.88);
+    --input-bg: #090909;
+    --nav-bg: rgba(17, 17, 17, 0.95);
+    --toggle-bg: #303030;
+    --red-bg: rgba(255, 77, 77, 0.12);
+    --red-border: rgba(255, 77, 77, 0.3);
+    --red-text: #ff4d4d;
+}
+
+/* LIGHT MODE OVERRIDES */
+body.light-mode {
+    --bg: #f4f5f8;
+    --card: #ffffff;
+    --card2: #eaecef;
+    --text: #111214;
+    --muted: #666a73;
+    --line: rgba(0, 0, 0, 0.1);
+    --header-bg: rgba(255, 255, 255, 0.9);
+    --input-bg: #f0f2f5;
+    --nav-bg: rgba(255, 255, 255, 0.95);
+    --toggle-bg: #ccc;
+}
+
+html { scroll-behavior:smooth; }
+body { min-height:100vh; padding-bottom:105px; background:radial-gradient(circle at 50% -10%, rgba(255,105,0,.16), transparent 36%), var(--bg); color:var(--text); font-family:Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif; transition: background 0.3s ease, color 0.3s ease; }
+button, input, select { font-family:inherit; }
+button { cursor:pointer; }
+.container { width:min(650px,92%); margin:auto; }
+
+/* HEADER */
+.header { position:sticky; top:0; z-index:1000; height:68px; background:var(--header-bg); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-bottom:1px solid var(--line); }
+.header-inner { height:100%; display:flex; align-items:center; justify-content:space-between; }
+.logo { font-size:19px; font-weight:950; letter-spacing:.3px; }
+.logo span { color:var(--orange); }
+
+/* PROFILE AVATAR */
+.profile-avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange), var(--orange2));
+    color: #070707;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(255, 105, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.2s ease;
+}
+.profile-avatar:hover { transform: scale(1.05); }
+
+/* PAGE SYSTEM */
+.page { display:none; animation:pageIn .28s ease; }
+.page.active { display:block; }
+@keyframes pageIn { from{ opacity:0; transform:translateY(8px); } to{ opacity:1; transform:translateY(0); } }
+
+/* HOME */
+.home-title { padding:35px 0 20px; }
+.home-title small { color:var(--orange); font-size:9px; font-weight:950; letter-spacing:1.5px; }
+.home-title h1 { margin-top:10px; font-size:40px; line-height:.98; letter-spacing:-1.7px; font-weight:950; }
+.home-title h1 span { color:var(--orange); }
+.home-title p { margin-top:14px; color:var(--muted); font-size:11px; line-height:1.7; }
+
+/* SLIDER */
+.slider { position:relative; height:250px; overflow:hidden; border-radius:25px; background:#151515; border:1px solid rgba(255,105,0,.20); box-shadow:0 20px 60px rgba(0,0,0,.45); }
+.slide { position:absolute; inset:0; opacity:0; background-size:cover; background-position:center; transition:opacity .55s ease; }
+.slide.active { opacity:1; }
+.slide::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg, rgba(0,0,0,.87), rgba(0,0,0,.32), rgba(0,0,0,.63)); }
+.slide-content { position:absolute; z-index:2; left:25px; bottom:28px; max-width:76%; color: #fff; }
+.slide-content small { color:var(--orange); font-size:9px; font-weight:950; letter-spacing:1px; }
+.slide-content h2 { margin-top:8px; font-size:27px; line-height:1.03; letter-spacing:-.7px; }
+.slide-content p { margin-top:8px; color:#bbb; font-size:9px; line-height:1.5; }
+.slider-dots { position:absolute; z-index:5; right:18px; bottom:14px; display:flex; align-items:center; gap:5px; }
+.slider-dot { width:6px; height:6px; border-radius:50%; background:#777; transition:.25s; }
+.slider-dot.active { width:18px; border-radius:10px; background:var(--orange); }
+
+/* ACTIONS */
+.quick-actions { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:15px; }
+.quick-card { width:100%; padding:20px; text-align:left; color:var(--text); background:var(--card); border:1px solid var(--line); border-radius:20px; transition:.25s; }
+.quick-card:hover { transform:translateY(-3px); border-color:rgba(255,105,0,.3); }
+.quick-icon { width:44px; height:44px; display:grid; place-items:center; border-radius:14px; background:rgba(255,105,0,.1); color:var(--orange); }
+.quick-icon svg { width:21px; height:21px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.quick-card h3 { margin-top:14px; font-size:14px; }
+.quick-card p { margin-top:5px; color:var(--muted); font-size:9px; }
+
+/* FORMS */
+.page-header { padding:35px 0 22px; }
+.page-header small { color:var(--orange); font-size:9px; font-weight:950; letter-spacing:1.3px; }
+.page-header h1 { margin-top:8px; font-size:31px; letter-spacing:-.8px; }
+.page-header p { margin-top:8px; color:var(--muted); font-size:11px; line-height:1.65; }
+.form-card { padding:21px; background:var(--card); border:1px solid var(--line); border-radius:23px; }
+.form-group { margin-bottom:16px; }
+.form-group label { display:block; margin-bottom:7px; color:var(--muted); font-size:9px; font-weight:900; letter-spacing:.4px; }
+.form-group input, .form-group select { width:100%; height:50px; padding:0 15px; outline:none; color:var(--text); background:var(--input-bg); border:1px solid var(--line); border-radius:13px; font-size:12px; }
+.form-group input:focus, .form-group select:focus { border-color:var(--orange); }
+
+.upload-box { position:relative; min-height:145px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:18px; text-align:center; background:var(--input-bg); border:1px dashed rgba(255,105,0,.35); border-radius:17px; }
+.upload-icon { width:48px; height:48px; display:grid; place-items:center; border-radius:15px; background:rgba(255,105,0,.1); color:var(--orange); }
+.upload-icon svg { width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.8; }
+.upload-box strong { margin-top:10px; font-size:12px; }
+.upload-box span { margin-top:5px; color:var(--muted); font-size:9px; }
+.upload-box input { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer; }
+.receipt-preview { display:none; width:100%; max-height:190px; object-fit:contain; border-radius:12px; }
+
+.submit-btn { width:100%; height:52px; border:0; border-radius:14px; background:linear-gradient(135deg, var(--orange), var(--orange2)); color:#090909; font-size:11px; font-weight:950; }
+.withdraw-info { display:flex; gap:12px; padding:16px; margin-bottom:17px; border-radius:16px; background:rgba(255,105,0,.05); border:1px solid rgba(255,105,0,.12); }
+.withdraw-info-icon { width:38px; height:38px; flex-shrink:0; display:grid; place-items:center; border-radius:12px; background:rgba(255,105,0,.1); color:var(--orange); font-size:17px; font-weight:950; }
+
+/* SETTINGS */
+.settings-list { display:flex; flex-direction:column; gap:10px; }
+.setting-item { display:flex; align-items:center; gap:14px; padding:17px; background:var(--card); border:1px solid var(--line); border-radius:17px; }
+.setting-icon { width:42px; height:42px; flex-shrink:0; display:grid; place-items:center; border-radius:13px; background:var(--card2); color:var(--orange); }
+.setting-icon svg { width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.8; }
+.setting-info { flex:1; }
+
+/* USER PROFILE IN SETTINGS */
+.user-profile-item { border-color: rgba(255, 105, 0, 0.2); }
+.user-avatar-large { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--orange), var(--orange2)); color: #070707; display: grid; place-items: center; font-size: 18px; font-weight: 900; }
+.setting-info strong { display: block; font-size: 14px; color: var(--text); }
+.setting-info small { font-size: 10px; color: var(--muted); }
+
+/* LOGOUT BUTTON IN SETTINGS */
+.logout-item { background: var(--red-bg); border-color: var(--red-border); cursor: pointer; transition: background 0.2s; }
+.logout-item:hover { background: rgba(255, 77, 77, 0.2); }
+.logout-item .setting-icon { background: rgba(255, 77, 77, 0.15); color: var(--red-text); }
+.logout-item h3 { color: var(--red-text); }
+
+/* LANGUAGE SELECTOR */
+.lang-setting-card { flex-direction: column; align-items: stretch !important; gap: 14px; }
+.setting-head { display: flex; align-items: center; gap: 14px; }
+.lang-options { display: flex; flex-direction: column; gap: 8px; margin-top: 5px; }
+.lang-option-card { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--input-bg); border: 1px solid var(--line); border-radius: 12px; cursor: pointer; transition: all 0.2s ease; }
+.lang-option-card input { display: none; }
+.lang-option-card span { font-size: 13px; font-weight: 700; color: var(--text); }
+.radio-check { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #555; position: relative; transition: 0.2s; }
+.lang-option-card.active { border-color: var(--orange); background: rgba(255, 105, 0, 0.06); }
+.lang-option-card.active .radio-check { border-color: var(--orange); }
+.lang-option-card.active .radio-check::after { content: ""; position: absolute; inset: 3px; background: var(--orange); border-radius: 50%; }
+
+/* TOGGLE SWITCH */
+.toggle { width:44px; height:24px; padding:3px; border:0; border-radius:20px; background:var(--toggle-bg); cursor:pointer; transition:.25s; }
+.toggle::after { content:""; display:block; width:18px; height:18px; border-radius:50%; background:#888; transition:.25s; }
+.toggle.on { background:var(--orange); }
+.toggle.on::after { transform:translateX(20px); background:#fff; }
+
+.notice { margin-top:18px; text-align:center; color:var(--muted); font-size:9px; line-height:1.6; }
+
+.whatsapp { position:fixed; right:18px; bottom:98px; z-index:998; width:50px; height:50px; display:grid; place-items:center; border-radius:50%; background:#20d66b; color:#06150b; }
+.whatsapp svg { width:23px; height:23px; stroke:currentColor; fill:none; stroke-width:1.8; }
+
+/* BOTTOM NAVIGATION */
+.bottom-nav { position:fixed; left:50%; bottom:11px; transform:translateX(-50%); width:min(500px,94%); height:70px; padding:6px; display:flex; align-items:center; justify-content:space-around; background:var(--nav-bg); backdrop-filter:blur(24px); border:1px solid var(--line); border-radius:23px; z-index:9999; }
+.nav-btn { position:relative; width:25%; height:58px; border:0; background:transparent; color:var(--muted); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; border-radius:17px; }
+.nav-btn svg { width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+.nav-btn span { font-size:8px; font-weight:900; }
+.nav-btn.active { color:var(--orange); background:rgba(255,105,0,.09); }
+.toast { position:fixed; left:50%; bottom:92px; transform:translate(-50%,20px); z-index:10000; min-width:220px; padding:13px 18px; text-align:center; background:var(--card); border:1px solid var(--line); border-radius:12px; color:var(--text); font-size:10px; opacity:0; pointer-events:none; transition:.3s; }
+.toast.show { opacity:1; transform:translate(-50%,0); }
+</style>
 </head>
-<body class="dark-mode">
 
-    <!-- HEADER -->
-    <header class="app-header">
-        <div class="logo-title">888STARZ AGENT</div>
-        <div class="user-avatar" id="headerProfileAvatar">
-            <span id="avatarText">S</span>
+<body>
+
+<header class="header">
+    <div class="container header-inner">
+        <div class="logo">888<span>STARZ</span> AGENT</div>
+        <div class="profile-avatar" id="headerProfileAvatar" title="Profile">
+            <span id="avatarText">U</span>
         </div>
-    </header>
+    </div>
+</header>
 
-    <!-- MAIN CONTENT AREA -->
-    <main class="app-main">
-
-        <!-- HOME PAGE -->
-        <section id="homePage" class="page active">
-            <div class="hero-card">
-                <div class="hero-tag" data-i18n="subHeader">INDEPENDENT AGENT SERVICE</div>
+<main>
+    <section id="homePage" class="page active">
+        <div class="container">
+            <div class="home-title">
+                <small data-i18n="subHeader">INDEPENDENT AGENT SERVICE</small>
                 <h1 id="mainHeroTitle">Fast Deposit<br><span>&amp; Withdrawal</span></h1>
-                <p data-i18n="heroDescription">Deposit and withdrawal assistance for 888Starz customers. Verify payment details with the agent before transactions.</p>
+                <p data-i18n="heroDescription">888Starz customers සඳහා deposit සහ withdrawal assistance. Transaction එකකට පෙර agent සමඟ payment details verify කරන්න.</p>
             </div>
 
-            <!-- SLIDER -->
-            <div class="slider-container">
-                <div class="slide active">
-                    <span class="slide-badge" data-i18n="slide1Small">FAST SERVICE</span>
-                    <h2 data-i18n="slide1Title">Deposit<br>Made Easy</h2>
-                    <p data-i18n="slide1Desc">Upload your receipt and submit your deposit details.</p>
+            <div class="slider">
+                <div class="slide active" style="background-image:url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&amp;fit=crop&amp;w=1200&amp;q=80');">
+                    <div class="slide-content">
+                        <small data-i18n="slide1Small">FAST SERVICE</small>
+                        <h2 data-i18n="slide1Title">Deposit<br>Made Easy</h2>
+                        <p data-i18n="slide1Desc">Upload your receipt and submit your deposit details.</p>
+                    </div>
                 </div>
-                <div class="slide">
-                    <span class="slide-badge" data-i18n="slide2Small">EASY WITHDRAWAL</span>
-                    <h2 data-i18n="slide2Title">Quick<br>Withdrawal</h2>
-                    <p data-i18n="slide2Desc">Send your withdrawal request through our agent.</p>
+                <div class="slide" style="background-image:url('https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&amp;fit=crop&amp;w=1200&amp;q=80');">
+                    <div class="slide-content">
+                        <small data-i18n="slide2Small">EASY WITHDRAWAL</small>
+                        <h2 data-i18n="slide2Title">Quick<br>Withdrawal</h2>
+                        <p data-i18n="slide2Desc">Send your withdrawal request through our agent.</p>
+                    </div>
                 </div>
-                <div class="slide">
-                    <span class="slide-badge" data-i18n="slide3Small">24 / 7 SUPPORT</span>
-                    <h2 data-i18n="slide3Title">Agent<br>Support</h2>
-                    <p data-i18n="slide3Desc">Get assistance whenever you need it.</p>
+                <div class="slide" style="background-image:url('https://images.unsplash.com/photo-1563013544-824ae1b704d3?auto=format&amp;fit=crop&amp;w=1200&amp;q=80');">
+                    <div class="slide-content">
+                        <small data-i18n="slide3Small">24 / 7 SUPPORT</small>
+                        <h2 data-i18n="slide3Title">Agent<br>Support</h2>
+                        <p data-i18n="slide3Desc">Get assistance whenever you need it.</p>
+                    </div>
                 </div>
                 <div class="slider-dots">
                     <span class="slider-dot active"></span>
@@ -51,195 +231,196 @@
                 </div>
             </div>
 
-            <!-- ACTION BUTTONS -->
-            <div class="action-grid">
-                <button class="action-card" data-page="deposit">
-                    <div class="action-icon">⬆</div>
-                    <div class="action-info">
-                        <strong data-i18n="btnDeposit">Deposit</strong>
-                        <span data-i18n="btnDepositSub">Submit payment receipt</span>
-                    </div>
+            <div class="quick-actions">
+                <button class="quick-card" data-page="deposit">
+                    <div class="quick-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M12 16V8"/><path d="M9 11l3-3 3 3"/></svg></div>
+                    <h3 data-i18n="btnDeposit">Deposit</h3>
+                    <p data-i18n="btnDepositSub">Submit payment receipt</p>
                 </button>
-                <button class="action-card" data-page="withdraw">
-                    <div class="action-icon">⬇</div>
-                    <div class="action-info">
-                        <strong data-i18n="btnWithdraw">Withdrawal</strong>
-                        <span data-i18n="btnWithdrawSub">Request withdrawal</span>
-                    </div>
+                <button class="quick-card" data-page="withdraw">
+                    <div class="quick-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M12 8v8"/><path d="M9 13l3 3 3-3"/></svg></div>
+                    <h3 data-i18n="btnWithdraw">Withdrawal</h3>
+                    <p data-i18n="btnWithdrawSub">Request withdrawal</p>
                 </button>
             </div>
 
-            <div class="notice-box" data-i18n="homeNotice">
+            <div class="notice" data-i18n="homeNotice">
                 This is an independent agent service and is not the official 888Starz website.
             </div>
-        </section>
-
-        <!-- DEPOSIT PAGE -->
-        <section id="depositPage" class="page">
-            <div class="page-header">
-                <h2 data-i18n="depositTitle">Deposit Request</h2>
-                <p data-i18n="depositDesc">Upload payment receipt and complete the details below.</p>
-            </div>
-
-            <div class="form-group">
-                <label data-i18n="lblReceipt">PAYMENT RECEIPT</label>
-                <div class="file-upload-box" onclick="document.getElementById('receipt').click();">
-                    <input type="file" id="receipt" accept="image/*" hidden>
-                    <div id="uploadContent" class="upload-content">
-                        <span class="icon">📷</span>
-                        <span data-i18n="txtUpload">Upload Receipt</span>
-                    </div>
-                    <img id="receiptPreview" src="" alt="Receipt Preview" style="display:none;">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label data-i18n="lblAmount">DEPOSIT AMOUNT</label>
-                <input type="number" id="depositAmount" placeholder="Enter deposit amount">
-            </div>
-
-            <div class="form-group">
-                <label data-i18n="lblName">NAME</label>
-                <input type="text" id="depositName" placeholder="Enter your name">
-            </div>
-
-            <div class="form-group">
-                <label data-i18n="lblGameId">GAME ID</label>
-                <input type="text" id="gameId" placeholder="Enter your Game ID">
-            </div>
-
-            <div class="form-group">
-                <label data-i18n="lblWhatsapp">WHATSAPP NUMBER</label>
-                <input type="text" id="depositWhatsapp" placeholder="Enter WhatsApp number">
-            </div>
-
-            <button id="depositSubmitBtn" class="primary-btn" data-i18n="btnSubmitDeposit">SUBMIT DEPOSIT REQUEST</button>
-        </section>
-
-        <!-- WITHDRAWAL PAGE -->
-        <section id="withdrawPage" class="page">
-            <div class="page-header">
-                <h2 data-i18n="withdrawTitle">Withdrawal Request</h2>
-                <p data-i18n="withdrawDesc">Enter your details for withdrawal processing.</p>
-            </div>
-
-            <div class="info-alert">
-                <strong data-i18n="txtImportant">Important:</strong>
-                <span data-i18n="txtWithdrawInfo">Please double-check all details before submitting your withdrawal request.</span>
-            </div>
-
-            <div class="form-group">
-                <label data-i18n="lblName">NAME</label>
-                <input type="text" id="withdrawName" placeholder="Enter your name">
-            </div>
-
-            <div class="form-group">
-                <label data-i18n="lblGameId">GAME ID</label>
-                <input type="text" id="withdrawGameId" placeholder="Enter your Game ID">
-            </div>
-
-            <div class="form-group">
-                <label data-i18n="lblWithdrawAmount">WITHDRAWAL AMOUNT</label>
-                <input type="number" id="withdrawAmount" placeholder="Enter withdrawal amount">
-            </div>
-
-            <div class="form-group">
-                <label data-i18n="lblWhatsapp">WHATSAPP NUMBER</label>
-                <input type="text" id="withdrawWhatsapp" placeholder="Enter WhatsApp number">
-            </div>
-
-            <div class="form-group">
-                <label data-i18n="lblBankDetails">PAYMENT / BANK DETAILS</label>
-                <textarea id="withdrawDetails" rows="3" placeholder="Enter payment details"></textarea>
-            </div>
-
-            <button id="withdrawSubmitBtn" class="primary-btn" data-i18n="btnSubmitWithdraw">SUBMIT WITHDRAWAL REQUEST</button>
-        </section>
-
-        <!-- SETTINGS PAGE -->
-        <section id="settingsPage" class="page">
-            <div class="settings-profile-card">
-                <div class="profile-avatar-large">
-                    <span id="settingAvatarText">S</span>
-                </div>
-                <h3 id="userName">User Account</h3>
-                <p id="userEmail">Active User</p>
-            </div>
-
-            <div class="setting-item">
-                <div>
-                    <strong data-i18n="lblTheme">Dark Mode</strong>
-                    <p data-i18n="descTheme">Switch between Light and Dark mode</p>
-                </div>
-                <div class="toggle-switch on" id="toggleThemeBtn">
-                    <div class="toggle-circle"></div>
-                </div>
-            </div>
-
-            <div class="setting-section-title" data-i18n="lblLanguage">Language</div>
-            <div class="language-selector">
-                <div class="lang-option-card" data-lang="en">
-                    <span>English</span>
-                    <input type="radio" name="lang" value="en">
-                </div>
-                <div class="lang-option-card" data-lang="si">
-                    <span>සිංහල</span>
-                    <input type="radio" name="lang" value="si">
-                </div>
-                <div class="lang-option-card" data-lang="ta">
-                    <span>தமிழ்</span>
-                    <input type="radio" name="lang" value="ta">
-                </div>
-            </div>
-
-            <div class="setting-item" id="whatsappSupportBtn">
-                <div>
-                    <strong data-i18n="lblSupport">Agent Support</strong>
-                    <p data-i18n="descSupport">Contact WhatsApp support</p>
-                </div>
-                <span>💬</span>
-            </div>
-
-            <button id="logoutBtn" class="logout-btn" data-i18n="btnLogout">Logout</button>
-        </section>
-
-    </main>
-
-    <!-- BOTTOM NAVIGATION -->
-    <nav class="bottom-nav">
-        <button class="nav-btn active" data-page="home">
-            <span class="nav-icon">🏠</span>
-            <span class="nav-text" data-i18n="navHome">Home</span>
-        </button>
-        <button class="nav-btn" data-page="deposit">
-            <span class="nav-icon">⬆</span>
-            <span class="nav-text" data-i18n="navDeposit">Deposit</span>
-        </button>
-        <button class="nav-btn" data-page="withdraw">
-            <span class="nav-icon">⬇</span>
-            <span class="nav-text" data-i18n="navWithdraw">Withdrawal</span>
-        </button>
-        <button class="nav-btn" data-page="settings">
-            <span class="nav-icon">⚙</span>
-            <span class="nav-text" data-i18n="navSettings">Setting</span>
-        </button>
-    </nav>
-
-    <!-- CUSTOM SUCCESS MODAL POPUP -->
-    <div id="customModal" class="custom-modal-overlay">
-        <div class="custom-modal-card">
-            <div class="modal-icon-wrap">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-            </div>
-            <h3 id="modalTitle">Success!</h3>
-            <p id="modalMessage">Your request has been submitted successfully.</p>
-            <button id="modalCloseBtn" class="modal-btn">OK</button>
         </div>
-    </div>
+    </section>
 
-    <!-- MAIN JAVASCRIPT MODULE -->
-    <script type="module" src="app.js"></script>
+    <section id="depositPage" class="page">
+        <div class="container">
+            <div class="page-header">
+                <small data-i18n="btnDeposit">DEPOSIT</small>
+                <h1 data-i18n="depositTitle">Deposit Request</h1>
+                <p data-i18n="depositDesc">Payment receipt එක upload කරලා පහත details සම්පූර්ණ කරන්න.</p>
+            </div>
+            <div class="form-card">
+                <div class="form-group">
+                    <label data-i18n="lblReceipt">PAYMENT RECEIPT</label>
+                    <div class="upload-box">
+                        <img id="receiptPreview" class="receipt-preview" alt="Receipt Preview">
+                        <div id="uploadContent" style="display: flex; flex-direction: column; align-items: center;">
+                            <div class="upload-icon"><svg viewBox="0 0 24 24"><path d="M12 16V4"/><path d="M8 8l4-4 4 4"/><path d="M5 14v4 a2 2 0 0 0 2 2 h10 a2 2 0 0 0 2-2 v-4"/></svg></div>
+                            <strong data-i18n="txtUpload">Upload Receipt</strong>
+                            <span>JPG / PNG / WEBP</span>
+                        </div>
+                        <input type="file" id="receipt" accept="image/*">
+                    </div>
+                </div>
+                <div class="form-group"><label data-i18n="lblAmount">DEPOSIT AMOUNT</label><input type="number" id="depositAmount" placeholder="Enter deposit amount"></div>
+                <div class="form-group"><label data-i18n="lblName">NAME</label><input type="text" id="depositName" placeholder="Enter your name"></div>
+                <div class="form-group"><label data-i18n="lblGameId">GAME ID</label><input type="text" id="gameId" placeholder="Enter your Game ID"></div>
+                <div class="form-group"><label data-i18n="lblWhatsapp">WHATSAPP NUMBER</label><input type="tel" id="depositWhatsapp" placeholder="Enter WhatsApp number"></div>
+                <button class="submit-btn" id="depositSubmitBtn" data-i18n="btnSubmitDeposit">SUBMIT DEPOSIT REQUEST</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="withdrawPage" class="page">
+        <div class="container">
+            <div class="page-header">
+                <small data-i18n="btnWithdraw">WITHDRAWAL</small>
+                <h1 data-i18n="withdrawTitle">Withdrawal Request</h1>
+                <p data-i18n="withdrawDesc">Withdrawal request එක සඳහා ඔබගේ details ඇතුළත් කරන්න.</p>
+            </div>
+            <div class="withdraw-info">
+                <div class="withdraw-info-icon">!</div>
+                <div><h4 data-i18n="txtImportant">Important</h4><p data-i18n="txtWithdrawInfo">Withdrawal details submit කිරීමට පෙර සියලුම තොරතුරු නිවැරදි බව තහවුරු කරන්න.</p></div>
+            </div>
+            <div class="form-card">
+                <div class="form-group"><label data-i18n="lblName">NAME</label><input type="text" id="withdrawName" placeholder="Enter your name"></div>
+                <div class="form-group"><label data-i18n="lblGameId">GAME ID</label><input type="text" id="withdrawGameId" placeholder="Enter your Game ID"></div>
+                <div class="form-group"><label data-i18n="lblWithdrawAmount">WITHDRAWAL AMOUNT</label><input type="number" id="withdrawAmount" placeholder="Enter withdrawal amount"></div>
+                <div class="form-group"><label data-i18n="lblWhatsapp">WHATSAPP NUMBER</label><input type="tel" id="withdrawWhatsapp" placeholder="Enter WhatsApp number"></div>
+                <div class="form-group"><label data-i18n="lblBankDetails">PAYMENT / BANK DETAILS</label><input type="text" id="withdrawDetails" placeholder="Enter payment details"></div>
+                <button class="submit-btn" id="withdrawSubmitBtn" data-i18n="btnSubmitWithdraw">SUBMIT WITHDRAWAL REQUEST</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="settingsPage" class="page">
+        <div class="container">
+            <div class="page-header">
+                <small data-i18n="navSettings">SETTINGS</small>
+                <h1 data-i18n="titleSettings">Settings</h1>
+            </div>
+            <div class="settings-list">
+                
+                <div class="setting-item user-profile-item">
+                    <div class="user-avatar-large" id="settingAvatarText">U</div>
+                    <div class="setting-info">
+                        <strong id="userName">User Account</strong>
+                        <small id="userEmail">Active Session</small>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-icon">
+                        <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                    </div>
+                    <div class="setting-info">
+                        <h3 data-i18n="lblTheme">Dark Mode</h3>
+                        <p data-i18n="descTheme">Switch between Light and Dark mode</p>
+                    </div>
+                    <button class="toggle on" id="toggleThemeBtn"></button>
+                </div>
+
+                <div class="setting-item lang-setting-card">
+                    <div class="setting-head">
+                        <div class="setting-icon">
+                            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                        </div>
+                        <div class="setting-info">
+                            <h3 data-i18n="lblLanguage">Language</h3>
+                            <p data-i18n="descLanguage">Select system language</p>
+                        </div>
+                    </div>
+
+                    <div class="lang-options">
+                        <label class="lang-option-card active" data-lang="en">
+                            <input type="radio" name="appLang" value="en" checked>
+                            <span>English</span>
+                            <div class="radio-check"></div>
+                        </label>
+                        <label class="lang-option-card" data-lang="si">
+                            <input type="radio" name="appLang" value="si">
+                            <span>සිංහල</span>
+                            <div class="radio-check"></div>
+                        </label>
+                        <label class="lang-option-card" data-lang="ta">
+                            <input type="radio" name="appLang" value="ta">
+                            <span>தமிழ்</span>
+                            <div class="radio-check"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="setting-item">
+                    <div class="setting-icon"><svg viewBox="0 0 24 24"><path d="M18 8 a6 6 0 0 0-12 0 c0 7-3 7-3 9 h18 c0-2-3-2-3-9"/><path d="M10 21h4"/></svg></div>
+                    <div class="setting-info"><h3 data-i18n="lblNotif">Notifications</h3><p data-i18n="descNotif">Receive transaction updates</p></div>
+                    <button class="toggle on" id="toggleNotifBtn"></button>
+                </div>
+                
+                <div class="setting-item" id="whatsappSupportBtn" style="cursor:pointer">
+                    <div class="setting-icon"><svg viewBox="0 0 24 24"><path d="M20 11.5 a8 8 0 0 1-11.5 7.2 L4 20l1.3-4.2 A8 8 0 1 1 20 11.5Z"/></svg></div>
+                    <div class="setting-info"><h3 data-i18n="lblSupport">Agent Support</h3><p data-i18n="descSupport">Contact WhatsApp support</p></div>
+                    <div>→</div>
+                </div>
+
+                <div class="setting-item logout-item" id="logoutBtn">
+                    <div class="setting-icon">
+                        <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                    </div>
+                    <div class="setting-info">
+                        <h3 data-i18n="btnLogout">Logout</h3>
+                        <p data-i18n="descLogout">Sign out from your account</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+</main>
+
+<a href="https://wa.me/94702883324" class="whatsapp" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M20 11.5 a8 8 0 0 1-11.5 7.2 L4 20l1.3-4.2 A8 8 0 1 1 20 11.5Z"/></svg></a>
+
+<nav class="bottom-nav">
+    <button class="nav-btn active" data-page="home">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <span data-i18n="navHome">Home</span>
+    </button>
+    <button class="nav-btn" data-page="deposit">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M12 16V8"/><path d="M9 11l3-3 3 3"/></svg>
+        <span data-i18n="navDeposit">Deposit</span>
+    </button>
+    <button class="nav-btn" data-page="withdraw">
+        <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M12 8v8"/><path d="M9 13l3 3 3-3"/></svg>
+        <span data-i18n="navWithdraw">Withdrawal</span>
+    </button>
+    <button class="nav-btn" data-page="settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span data-i18n="navSettings">Setting</span>
+    </button>
+</nav>
+
+<div id="toast" class="toast"></div>
+
+<script type="module" src="js/app.js"></script>
+<!-- CUSTOM POPUP MODAL -->
+<div id="customModal" class="custom-modal-overlay">
+    <div class="custom-modal-card">
+        <div class="modal-icon-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <h3 id="modalTitle">Success!</h3>
+        <p id="modalMessage">Your request has been submitted successfully.</p>
+        <button id="modalCloseBtn" class="modal-btn">OK</button>
+    </div>
+</div>
 </body>
 </html>

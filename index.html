@@ -136,19 +136,16 @@ button { cursor:pointer; }
 .setting-icon svg { width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.8; }
 .setting-info { flex:1; }
 
-/* USER PROFILE IN SETTINGS */
 .user-profile-item { border-color: rgba(255, 105, 0, 0.2); }
 .user-avatar-large { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, var(--orange), var(--orange2)); color: #070707; display: grid; place-items: center; font-size: 18px; font-weight: 900; }
 .setting-info strong { display: block; font-size: 14px; color: var(--text); }
 .setting-info small { font-size: 10px; color: var(--muted); }
 
-/* LOGOUT BUTTON IN SETTINGS */
 .logout-item { background: var(--red-bg); border-color: var(--red-border); cursor: pointer; transition: background 0.2s; }
 .logout-item:hover { background: rgba(255, 77, 77, 0.2); }
 .logout-item .setting-icon { background: rgba(255, 77, 77, 0.15); color: var(--red-text); }
 .logout-item h3 { color: var(--red-text); }
 
-/* LANGUAGE SELECTOR */
 .lang-setting-card { flex-direction: column; align-items: stretch !important; gap: 14px; }
 .setting-head { display: flex; align-items: center; gap: 14px; }
 .lang-options { display: flex; flex-direction: column; gap: 8px; margin-top: 5px; }
@@ -160,25 +157,90 @@ button { cursor:pointer; }
 .lang-option-card.active .radio-check { border-color: var(--orange); }
 .lang-option-card.active .radio-check::after { content: ""; position: absolute; inset: 3px; background: var(--orange); border-radius: 50%; }
 
-/* TOGGLE SWITCH */
 .toggle { width:44px; height:24px; padding:3px; border:0; border-radius:20px; background:var(--toggle-bg); cursor:pointer; transition:.25s; }
 .toggle::after { content:""; display:block; width:18px; height:18px; border-radius:50%; background:#888; transition:.25s; }
 .toggle.on { background:var(--orange); }
 .toggle.on::after { transform:translateX(20px); background:#fff; }
 
 .notice { margin-top:18px; text-align:center; color:var(--muted); font-size:9px; line-height:1.6; }
-
 .whatsapp { position:fixed; right:18px; bottom:98px; z-index:998; width:50px; height:50px; display:grid; place-items:center; border-radius:50%; background:#20d66b; color:#06150b; }
 .whatsapp svg { width:23px; height:23px; stroke:currentColor; fill:none; stroke-width:1.8; }
 
 /* BOTTOM NAVIGATION */
-.bottom-nav { position:fixed; left:50%; bottom:11px; transform:translateX(-50%); width:min(500px,94%); height:70px; padding:6px; display:flex; align-items:center; justify-content:space-around; background:var(--nav-bg); backdrop-filter:blur(24px); border:1px solid var(--line); border-radius:23px; z-index:9999; }
+.bottom-nav { position:fixed; left:50%; bottom:11px; transform:translateX(-50%); width:min(500px,94%); height:70px; padding:6px; display:flex; align-items:center; justify-around; background:var(--nav-bg); backdrop-filter:blur(24px); border:1px solid var(--line); border-radius:23px; z-index:9999; }
 .nav-btn { position:relative; width:25%; height:58px; border:0; background:transparent; color:var(--muted); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; border-radius:17px; }
 .nav-btn svg { width:20px; height:20px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
 .nav-btn span { font-size:8px; font-weight:900; }
 .nav-btn.active { color:var(--orange); background:rgba(255,105,0,.09); }
-.toast { position:fixed; left:50%; bottom:92px; transform:translate(-50%,20px); z-index:10000; min-width:220px; padding:13px 18px; text-align:center; background:var(--card); border:1px solid var(--line); border-radius:12px; color:var(--text); font-size:10px; opacity:0; pointer-events:none; transition:.3s; }
-.toast.show { opacity:1; transform:translate(-50%,0); }
+
+/* CUSTOM POPUP MODAL STYLES */
+.popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 100000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.popup-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+.popup-card {
+    width: min(380px, 90%);
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 24px;
+    padding: 28px 24px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    transform: scale(0.85);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.popup-overlay.show .popup-card {
+    transform: scale(1);
+}
+.popup-icon {
+    width: 62px;
+    height: 62px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: rgba(32, 214, 107, 0.15);
+    color: var(--green);
+    display: grid;
+    place-items: center;
+    transition: all 0.3s ease;
+}
+.popup-title {
+    font-size: 20px;
+    font-weight: 900;
+    margin-bottom: 8px;
+    color: var(--text);
+}
+.popup-message {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 22px;
+}
+.popup-btn {
+    width: 100%;
+    height: 48px;
+    border: 0;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--orange), var(--orange2));
+    color: #070707;
+    font-weight: 900;
+    font-size: 12px;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(255, 105, 0, 0.25);
+}
 </style>
 </head>
 
@@ -308,7 +370,6 @@ button { cursor:pointer; }
                 <h1 data-i18n="titleSettings">Settings</h1>
             </div>
             <div class="settings-list">
-                
                 <div class="setting-item user-profile-item">
                     <div class="user-avatar-large" id="settingAvatarText">U</div>
                     <div class="setting-info">
@@ -379,7 +440,6 @@ button { cursor:pointer; }
                         <p data-i18n="descLogout">Sign out from your account</p>
                     </div>
                 </div>
-
             </div>
         </div>
     </section>
@@ -406,7 +466,17 @@ button { cursor:pointer; }
     </button>
 </nav>
 
-<div id="toast" class="toast"></div>
+<!-- DYNAMIC STYLED POPUP MODAL -->
+<div id="successPopup" class="popup-overlay">
+    <div class="popup-card">
+        <div class="popup-icon">
+            <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+        <h2 class="popup-title" id="popupTitle">Success!</h2>
+        <p class="popup-message" id="popupMessage">Your request has been submitted successfully.</p>
+        <button class="popup-btn" id="popupCloseBtn">OK</button>
+    </div>
+</div>
 
 <script type="module" src="js/app.js"></script>
 </body>

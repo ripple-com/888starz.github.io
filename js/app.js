@@ -503,23 +503,3 @@ onAuthStateChanged(auth, (user) => {
         }
     }
 });
-function showCustomModal(title, message, callback) {
-    const modal = document.getElementById("customModal");
-    const titleEl = document.getElementById("modalTitle");
-    const msgEl = document.getElementById("modalMessage");
-    const closeBtn = document.getElementById("modalCloseBtn");
-
-    if (modal && titleEl && msgEl) {
-        titleEl.textContent = title;
-        msgEl.textContent = message;
-        modal.classList.add("active");
-
-        const handleClose = () => {
-            modal.classList.remove("active");
-            closeBtn.removeEventListener("click", handleClose);
-            if (callback) callback();
-        };
-
-        closeBtn.addEventListener("click", handleClose);
-    }
-}

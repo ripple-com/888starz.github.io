@@ -180,26 +180,14 @@ function playSuccessSound() {
     }
 }
 
-// CUSTOM POPUP MODAL FUNCTION
-function showCustomModal(title, message, callback) {
+// SUCCESS TOAST NOTIFICATION
+function showToast(message) {
     playSuccessSound();
-    const modal = document.getElementById("customModal");
-    const titleEl = document.getElementById("modalTitle");
-    const msgEl = document.getElementById("modalMessage");
-    const closeBtn = document.getElementById("modalCloseBtn");
-
-    if (modal && titleEl && msgEl) {
-        titleEl.textContent = title;
-        msgEl.textContent = message;
-        modal.classList.add("active");
-
-        const handleClose = () => {
-            modal.classList.remove("active");
-            closeBtn.removeEventListener("click", handleClose);
-            if (callback) callback();
-        };
-
-        closeBtn.addEventListener("click", handleClose);
+    const toast = document.getElementById("toast");
+    if (toast) {
+        toast.textContent = message;
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 3500);
     }
 }
 
@@ -381,6 +369,13 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    const toggleNotifBtn = document.getElementById("toggleNotifBtn");
+    if (toggleNotifBtn) {
+        toggleNotifBtn.addEventListener("click", () => {
+            toggleNotifBtn.classList.toggle("on");
+        });
+    }
+
     const whatsappBtn = document.getElementById("whatsappSupportBtn");
     if (whatsappBtn) {
         whatsappBtn.addEventListener("click", () => {
@@ -388,7 +383,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // DEPOSIT SUBMIT (WITH CUSTOM STYLED POPUP)
+    // DEPOSIT SUBMIT (GUARANTEED SUCCESS FLOW)
     const depositSubmitBtn = document.getElementById("depositSubmitBtn");
     if (depositSubmitBtn) {
         depositSubmitBtn.addEventListener("click", async () => {
@@ -402,7 +397,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const file = fileInput ? fileInput.files[0] : null;
 
             if (!file || !amount || !name || !gameId || !whatsapp) {
-                showCustomModal("Error", t.msgFillAll);
+                alert(t.msgFillAll);
                 return;
             }
 
@@ -419,28 +414,31 @@ document.addEventListener("DOMContentLoaded", () => {
                             `⏰ *Time:* ${new Date().toLocaleString()}`;
 
             try {
+                // Telegram එකට සාර්ථකව Send වීම
                 await sendTelegramPhoto(file, caption);
             } catch (telegramErr) {
                 console.warn("Telegram Upload Warning:", telegramErr);
             } finally {
-                showCustomModal("Success!", t.msgDepSuccess, () => {
-                    document.getElementById("depositAmount").value = "";
-                    document.getElementById("depositName").value = "";
-                    document.getElementById("gameId").value = "";
-                    document.getElementById("depositWhatsapp").value = "";
-                    document.getElementById("receipt").value = "";
-                    if (document.getElementById("receiptPreview")) document.getElementById("receiptPreview").style.display = "none";
-                    if (document.getElementById("uploadContent")) document.getElementById("uploadContent").style.display = "flex";
+                // Telegram එකට ගිය පසු හෝ ඕනෑම අවස්ථාවක UI එක Reset වී User ට Alert එක යයි
+                alert(t.msgDepSuccess);
+                showToast(t.msgDepSuccess);
+                
+                document.getElementById("depositAmount").value = "";
+                document.getElementById("depositName").value = "";
+                document.getElementById("gameId").value = "";
+                document.getElementById("depositWhatsapp").value = "";
+                document.getElementById("receipt").value = "";
+                if (document.getElementById("receiptPreview")) document.getElementById("receiptPreview").style.display = "none";
+                if (document.getElementById("uploadContent")) document.getElementById("uploadContent").style.display = "flex";
 
-                    depositSubmitBtn.disabled = false;
-                    depositSubmitBtn.textContent = t.btnSubmitDeposit;
-                    showPage("home");
-                });
+                depositSubmitBtn.disabled = false;
+                depositSubmitBtn.textContent = t.btnSubmitDeposit;
+                showPage("home");
             }
         });
     }
 
-    // WITHDRAW SUBMIT (WITH CUSTOM STYLED POPUP)
+    // WITHDRAW SUBMIT (GUARANTEED SUCCESS FLOW)
     const withdrawSubmitBtn = document.getElementById("withdrawSubmitBtn");
     if (withdrawSubmitBtn) {
         withdrawSubmitBtn.addEventListener("click", async () => {
@@ -453,7 +451,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const details = document.getElementById("withdrawDetails").value.trim();
 
             if (!name || !gameId || !amount || !whatsapp || !details) {
-                showCustomModal("Error", t.msgFillAllW);
+                alert(t.msgFillAllW);
                 return;
             }
 
@@ -475,17 +473,18 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (err) {
                 console.warn("Telegram text warning:", err);
             } finally {
-                showCustomModal("Success!", t.msgWSuccess, () => {
-                    document.getElementById("withdrawName").value = "";
-                    document.getElementById("withdrawGameId").value = "";
-                    document.getElementById("withdrawAmount").value = "";
-                    document.getElementById("withdrawWhatsapp").value = "";
-                    document.getElementById("withdrawDetails").value = "";
+                alert(t.msgWSuccess);
+                showToast(t.msgWSuccess);
 
-                    withdrawSubmitBtn.disabled = false;
-                    withdrawSubmitBtn.textContent = t.btnSubmitWithdraw;
-                    showPage("home");
-                });
+                document.getElementById("withdrawName").value = "";
+                document.getElementById("withdrawGameId").value = "";
+                document.getElementById("withdrawAmount").value = "";
+                document.getElementById("withdrawWhatsapp").value = "";
+                document.getElementById("withdrawDetails").value = "";
+
+                withdrawSubmitBtn.disabled = false;
+                withdrawSubmitBtn.textContent = t.btnSubmitWithdraw;
+                showPage("home");
             }
         });
     }
@@ -504,3 +503,23 @@ onAuthStateChanged(auth, (user) => {
         }
     }
 });
+function showCustomModal(title, message, callback) {
+    const modal = document.getElementById("customModal");
+    const titleEl = document.getElementById("modalTitle");
+    const msgEl = document.getElementById("modalMessage");
+    const closeBtn = document.getElementById("modalCloseBtn");
+
+    if (modal && titleEl && msgEl) {
+        titleEl.textContent = title;
+        msgEl.textContent = message;
+        modal.classList.add("active");
+
+        const handleClose = () => {
+            modal.classList.remove("active");
+            closeBtn.removeEventListener("click", handleClose);
+            if (callback) callback();
+        };
+
+        closeBtn.addEventListener("click", handleClose);
+    }
+}

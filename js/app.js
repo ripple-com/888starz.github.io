@@ -149,19 +149,23 @@ function initTheme() {
     }
 }
 
-// SUCCESS NOTIFICATION SOUND (Web Audio API - No external mp3 file required)
+// SAFE SUCCESS NOTIFICATION SOUND (Web Audio API)
 function playSuccessSound() {
     try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (!AudioContext) return;
+        
         const ctx = new AudioContext();
+        if (ctx.state === 'suspended') {
+            ctx.resume();
+        }
         
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         
         osc.type = "sine";
-        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5 Tone
-        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1); // A5 Tone
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime); 
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1); 
         
         gain.gain.setValueAtTime(0.1, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
@@ -172,7 +176,7 @@ function playSuccessSound() {
         osc.start();
         osc.stop(ctx.currentTime + 0.35);
     } catch (e) {
-        console.warn("Audio Context Error:", e);
+        console.warn("Audio Context Error suppressed:", e);
     }
 }
 
@@ -226,7 +230,7 @@ function renderUserInfo(user) {
     }
 }
 
-// TELEGRAM PHOTO + CAPTION SENDER
+// TELEGRAM PHOTO + CAPTION SENDER (XMLHttpRequest)
 function sendTelegramPhoto(file, caption) {
     return new Promise((resolve, reject) => {
         const formData = new FormData();
@@ -381,7 +385,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // DEPOSIT SUBMIT WITH SOUND & POPUP
+    // DEPOSIT SUBMIT WITH SAFE ERROR HANDLING
     const depositSubmitBtn = document.getElementById("depositSubmitBtn");
     if (depositSubmitBtn) {
         depositSubmitBtn.addEventListener("click", async () => {
@@ -416,7 +420,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 await sendTelegramPhoto(file, caption);
 
-                // 2. Firebase Backup Save
+                // 2. Optional Firebase Backup Save
                 try {
                     const fileRef = ref(storage, `receipts/${userId}/${Date.now()}_${file.name}`);
                     await uploadBytes(fileRef, file);
@@ -426,7 +430,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         userId, name, gameId, whatsapp, amount: Number(amount), receiptURL, status: "pending", createdAt: serverTimestamp()
                     });
                 } catch (dbErr) {
-                    console.warn("Firebase save skipped/failed, but Telegram was sent successfully:", dbErr);
+                    console.warn("Firebase backup failed/skipped:", dbErr);
                 }
 
                 showToast(t.msgDepSuccess);
@@ -451,7 +455,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // WITHDRAW SUBMIT WITH SOUND & POPUP
+    // WITHDRAW SUBMIT WITH SAFE ERROR HANDLING
     const withdrawSubmitBtn = document.getElementById("withdrawSubmitBtn");
     if (withdrawSubmitBtn) {
         withdrawSubmitBtn.addEventListener("click", async () => {
@@ -486,13 +490,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 await sendTelegramText(textMessage);
 
-                // 2. Firebase Backup Save
+                // 2. Optional Firebase Backup Save
                 try {
                     await addDoc(collection(db, "withdrawalRequests"), {
                         userId, name, gameId, amount: Number(amount), whatsapp, paymentDetails: details, status: "pending", createdAt: serverTimestamp()
                     });
                 } catch (dbErr) {
-                    console.warn("Firebase save skipped/failed, but Telegram was sent successfully:", dbErr);
+                    console.warn("Firebase backup failed/skipped:", dbErr);
                 }
 
                 showToast(t.msgWSuccess);

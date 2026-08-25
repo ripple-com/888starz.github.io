@@ -149,12 +149,44 @@ function initTheme() {
     }
 }
 
+// SUCCESS NOTIFICATION SOUND (Web Audio API - No external mp3 file required)
+function playSuccessSound() {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5 Tone
+        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1); // A5 Tone
+        
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        
+        osc.start();
+        osc.stop(ctx.currentTime + 0.35);
+    } catch (e) {
+        console.warn("Audio Context Error:", e);
+    }
+}
+
+// SUCCESS POPUP TOAST NOTIFICATION
 function showToast(message) {
+    playSuccessSound();
     const toast = document.getElementById("toast");
-    if (!toast) return;
+    if (!toast) {
+        alert(message);
+        return;
+    }
     toast.textContent = message;
     toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 2800);
+    setTimeout(() => toast.classList.remove("show"), 3500);
 }
 
 function showPage(page) {
@@ -194,7 +226,7 @@ function renderUserInfo(user) {
     }
 }
 
-// 1. TELEGRAM PHOTO + CAPTION SENDER (XMLHttpRequest - 100% RELIABLE)
+// TELEGRAM PHOTO + CAPTION SENDER
 function sendTelegramPhoto(file, caption) {
     return new Promise((resolve, reject) => {
         const formData = new FormData();
@@ -222,7 +254,7 @@ function sendTelegramPhoto(file, caption) {
     });
 }
 
-// 2. TELEGRAM TEXT MESSAGE SENDER
+// TELEGRAM TEXT MESSAGE SENDER
 function sendTelegramText(textMessage) {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -349,7 +381,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // DEPOSIT SUBMIT WITH DIRECT TELEGRAM BOT SUPPORT
+    // DEPOSIT SUBMIT WITH SOUND & POPUP
     const depositSubmitBtn = document.getElementById("depositSubmitBtn");
     if (depositSubmitBtn) {
         depositSubmitBtn.addEventListener("click", async () => {
@@ -363,7 +395,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const file = fileInput ? fileInput.files[0] : null;
 
             if (!file || !amount || !name || !gameId || !whatsapp) {
-                showToast(t.msgFillAll);
+                alert(t.msgFillAll);
                 return;
             }
 
@@ -384,7 +416,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 await sendTelegramPhoto(file, caption);
 
-                // 2. Optional Firebase Firestore Save (Background)
+                // 2. Firebase Backup Save
                 try {
                     const fileRef = ref(storage, `receipts/${userId}/${Date.now()}_${file.name}`);
                     await uploadBytes(fileRef, file);
@@ -419,7 +451,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // WITHDRAW SUBMIT WITH DIRECT TELEGRAM BOT SUPPORT
+    // WITHDRAW SUBMIT WITH SOUND & POPUP
     const withdrawSubmitBtn = document.getElementById("withdrawSubmitBtn");
     if (withdrawSubmitBtn) {
         withdrawSubmitBtn.addEventListener("click", async () => {
@@ -432,7 +464,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const details = document.getElementById("withdrawDetails").value.trim();
 
             if (!name || !gameId || !amount || !whatsapp || !details) {
-                showToast(t.msgFillAllW);
+                alert(t.msgFillAllW);
                 return;
             }
 
@@ -454,7 +486,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 await sendTelegramText(textMessage);
 
-                // 2. Optional Firestore Save
+                // 2. Firebase Backup Save
                 try {
                     await addDoc(collection(db, "withdrawalRequests"), {
                         userId, name, gameId, amount: Number(amount), whatsapp, paymentDetails: details, status: "pending", createdAt: serverTimestamp()

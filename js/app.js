@@ -194,43 +194,59 @@ function renderUserInfo(user) {
     }
 }
 
-// Telegram Alert Function with CORS Fallback
-async function sendTelegramAlert(textMessage) {
-    const directUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-    const proxyUrl = `https://corsproxy.io/?` + encodeURIComponent(directUrl);
+// 1. TELEGRAM PHOTO + CAPTION SENDER (XMLHttpRequest - 100% RELIABLE)
+function sendTelegramPhoto(file, caption) {
+    return new Promise((resolve, reject) => {
+        const formData = new FormData();
+        formData.append("chat_id", TELEGRAM_CHAT_ID);
+        formData.append("photo", file);
+        formData.append("caption", caption);
+        formData.append("parse_mode", "Markdown");
 
-    const payload = {
-        chat_id: TELEGRAM_CHAT_ID,
-        text: textMessage,
-        parse_mode: "Markdown"
-    };
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, true);
 
-    try {
-        // Direct Call පළමුව උත්සාහ කරයි
-        let res = await fetch(directUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
+        xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(JSON.parse(xhr.responseText));
+            } else {
+                reject(new Error("Telegram Error: " + xhr.responseText));
+            }
+        };
 
-        // CORS Block වුවහොත් Proxy එකෙන් යවයි
-        if (!res.ok) {
-            res = await fetch(proxyUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-        }
-        return await res.json();
-    } catch (e) {
-        // Exception ආවොත් Proxy හරහා යවයි
-        const res = await fetch(proxyUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-        return await res.json();
-    }
+        xhr.onerror = function () {
+            reject(new Error("Network Error occurred while reaching Telegram."));
+        };
+
+        xhr.send(formData);
+    });
+}
+
+// 2. TELEGRAM TEXT MESSAGE SENDER
+function sendTelegramText(textMessage) {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+
+        xhr.onload = function () {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(JSON.parse(xhr.responseText));
+            } else {
+                reject(new Error("Telegram Error: " + xhr.responseText));
+            }
+        };
+
+        xhr.onerror = function () {
+            reject(new Error("Network Error while reaching Telegram."));
+        };
+
+        xhr.send(JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: textMessage,
+            parse_mode: "Markdown"
+        }));
+    });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -333,7 +349,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // DEPOSIT SUBMIT WITH FIREBASE AND TELEGRAM
+    // DEPOSIT SUBMIT WITH DIRECT TELEGRAM BOT SUPPORT
     const depositSubmitBtn = document.getElementById("depositSubmitBtn");
     if (depositSubmitBtn) {
         depositSubmitBtn.addEventListener("click", async () => {
@@ -356,28 +372,30 @@ document.addEventListener("DOMContentLoaded", () => {
                 depositSubmitBtn.textContent = "...";
 
                 const userId = user ? user.uid : "guest";
-                
-                // 1. Storage Upload
-                const fileRef = ref(storage, `receipts/${userId}/${Date.now()}_${file.name}`);
-                await uploadBytes(fileRef, file);
-                const receiptURL = await getDownloadURL(fileRef);
 
-                // 2. Firestore Save
-                await addDoc(collection(db, "depositRequests"), {
-                    userId, name, gameId, whatsapp, amount: Number(amount), receiptURL, status: "pending", createdAt: serverTimestamp()
-                });
+                // 1. Direct Telegram Photo & Caption Send
+                const caption = `📌 *NEW DEPOSIT REQUEST*\n\n` +
+                                `👤 *Name:* ${name}\n` +
+                                `🎮 *Game ID:* ${gameId}\n` +
+                                `💰 *Amount:* LKR ${amount}\n` +
+                                `📱 *WhatsApp:* ${whatsapp}\n` +
+                                `🆔 *User ID:* ${userId}\n` +
+                                `⏰ *Time:* ${new Date().toLocaleString()}`;
 
-                // 3. Telegram Message Notification
-                const textMessage = `📌 *NEW DEPOSIT REQUEST*\n\n` +
-                                    `👤 *Name:* ${name}\n` +
-                                    `🎮 *Game ID:* ${gameId}\n` +
-                                    `💰 *Amount:* LKR ${amount}\n` +
-                                    `📱 *WhatsApp:* ${whatsapp}\n` +
-                                    `🆔 *User ID:* ${userId}\n` +
-                                    `⏰ *Time:* ${new Date().toLocaleString()}\n\n` +
-                                    `🧾 *Receipt Link:* ${receiptURL}`;
+                await sendTelegramPhoto(file, caption);
 
-                await sendTelegramAlert(textMessage);
+                // 2. Optional Firebase Firestore Save (Background)
+                try {
+                    const fileRef = ref(storage, `receipts/${userId}/${Date.now()}_${file.name}`);
+                    await uploadBytes(fileRef, file);
+                    const receiptURL = await getDownloadURL(fileRef);
+
+                    await addDoc(collection(db, "depositRequests"), {
+                        userId, name, gameId, whatsapp, amount: Number(amount), receiptURL, status: "pending", createdAt: serverTimestamp()
+                    });
+                } catch (dbErr) {
+                    console.warn("Firebase save skipped/failed, but Telegram was sent successfully:", dbErr);
+                }
 
                 showToast(t.msgDepSuccess);
                 showPage("home");
@@ -388,12 +406,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("gameId").value = "";
                 document.getElementById("depositWhatsapp").value = "";
                 document.getElementById("receipt").value = "";
-                if(document.getElementById("receiptPreview")) document.getElementById("receiptPreview").style.display = "none";
-                if(document.getElementById("uploadContent")) document.getElementById("uploadContent").style.display = "flex";
+                if (document.getElementById("receiptPreview")) document.getElementById("receiptPreview").style.display = "none";
+                if (document.getElementById("uploadContent")) document.getElementById("uploadContent").style.display = "flex";
 
             } catch (err) {
-                console.error("Error submitting deposit:", err);
-                showToast("Error: " + err.message);
+                console.error("Deposit Submit Error:", err);
+                alert("Error: " + err.message);
             } finally {
                 depositSubmitBtn.disabled = false;
                 depositSubmitBtn.textContent = t.btnSubmitDeposit;
@@ -401,7 +419,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // WITHDRAW SUBMIT WITH FIREBASE AND TELEGRAM
+    // WITHDRAW SUBMIT WITH DIRECT TELEGRAM BOT SUPPORT
     const withdrawSubmitBtn = document.getElementById("withdrawSubmitBtn");
     if (withdrawSubmitBtn) {
         withdrawSubmitBtn.addEventListener("click", async () => {
@@ -424,22 +442,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const userId = user ? user.uid : "guest";
 
-                // 1. Firestore Save
-                await addDoc(collection(db, "withdrawalRequests"), {
-                    userId, name, gameId, amount: Number(amount), whatsapp, paymentDetails: details, status: "pending", createdAt: serverTimestamp()
-                });
-
-                // 2. Telegram Notification
+                // 1. Direct Telegram Text Send
                 const textMessage = `🔻 *NEW WITHDRAWAL REQUEST*\n\n` +
                                     `👤 *Name:* ${name}\n` +
                                     `🎮 *Game ID:* ${gameId}\n` +
                                     `💰 *Amount:* LKR ${amount}\n` +
                                     `📱 *WhatsApp:* ${whatsapp}\n` +
-                                    `🏦 *Bank/Payment Details:* ${details}\n` +
+                                    `🏦 *Details:* ${details}\n` +
                                     `🆔 *User ID:* ${userId}\n` +
                                     `⏰ *Time:* ${new Date().toLocaleString()}`;
 
-                await sendTelegramAlert(textMessage);
+                await sendTelegramText(textMessage);
+
+                // 2. Optional Firestore Save
+                try {
+                    await addDoc(collection(db, "withdrawalRequests"), {
+                        userId, name, gameId, amount: Number(amount), whatsapp, paymentDetails: details, status: "pending", createdAt: serverTimestamp()
+                    });
+                } catch (dbErr) {
+                    console.warn("Firebase save skipped/failed, but Telegram was sent successfully:", dbErr);
+                }
 
                 showToast(t.msgWSuccess);
                 showPage("home");
@@ -452,8 +474,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.getElementById("withdrawDetails").value = "";
 
             } catch (err) {
-                console.error("Error submitting withdrawal:", err);
-                showToast("Error: " + err.message);
+                console.error("Withdrawal Submit Error:", err);
+                alert("Error: " + err.message);
             } finally {
                 withdrawSubmitBtn.disabled = false;
                 withdrawSubmitBtn.textContent = t.btnSubmitWithdraw;

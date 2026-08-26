@@ -349,6 +349,9 @@ button { cursor:pointer; }
     border-radius: 14px;
     font-size: 12px;
     line-height: 1.4;
+    position: relative;
+    display: flex;
+    flex-direction: column;
 }
 .msg.user {
     align-self: flex-end;
@@ -363,6 +366,40 @@ button { cursor:pointer; }
     color: var(--text);
     border: 1px solid var(--line);
     border-bottom-left-radius: 2px;
+}
+
+/* CHAT TIME STAMP STYLING */
+.msg-time {
+    font-size: 8.5px;
+    margin-top: 4px;
+    opacity: 0.75;
+    align-self: flex-end;
+}
+.msg.user .msg-time {
+    color: rgba(0,0,0,0.7);
+}
+.msg.agent .msg-time {
+    color: var(--muted);
+}
+
+/* CHAT IMAGE STYLING */
+.chat-img-thumb {
+    max-width: 100%;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    margin-bottom: 2px;
+}
+.chat-img-thumb:hover {
+    transform: scale(1.02);
+}
+
+/* AUDIO PLAYER CUSTOM STYLING */
+.chat-audio-player {
+    width: 200px;
+    height: 36px;
+    border-radius: 8px;
+    outline: none;
 }
 
 .chat-input-area {
@@ -488,6 +525,44 @@ button { cursor:pointer; }
     font-size: 12px;
     cursor: pointer;
     box-shadow: 0 8px 20px rgba(255, 105, 0, 0.25);
+}
+
+/* IMAGE LIGHTBOX MODAL */
+.image-lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    backdrop-filter: blur(8px);
+    z-index: 100002;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    padding: 20px;
+}
+.image-lightbox.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+.image-lightbox img {
+    max-width: 95%;
+    max-height: 85vh;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    object-fit: contain;
+}
+.image-lightbox .close-lightbox {
+    position: absolute;
+    top: 25px;
+    right: 25px;
+    color: #fff;
+    font-size: 32px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    line-height: 1;
 }
 
 /* TOAST NOTIFICATION */
@@ -761,7 +836,8 @@ button { cursor:pointer; }
         </div>
         <div class="chat-messages" id="chatMessages">
             <div class="msg agent">
-                සාදරයෙන් පිළිගන්නවා! ඔබට අවශ්‍ය ඕනෑම සහායක් මෙතැනින් විමසන්න.
+                <span>සාදරයෙන් පිළිගන්නවා! ඔබට අවශ්‍ය ඕනෑම සහායක් මෙතැනින් විමසන්න.</span>
+                <span class="msg-time">Just now</span>
             </div>
         </div>
         
@@ -822,6 +898,12 @@ button { cursor:pointer; }
         <p class="popup-message" id="popupMessage">Your request has been submitted successfully.</p>
         <button class="popup-btn" id="popupCloseBtn">OK</button>
     </div>
+</div>
+
+<!-- IMAGE LIGHTBOX VIEW MODAL -->
+<div id="imageLightbox" class="image-lightbox">
+    <button class="close-lightbox" id="closeLightboxBtn">&times;</button>
+    <img id="lightboxImg" src="" alt="Full View">
 </div>
 
 <script type="module" src="js/app.js"></script>

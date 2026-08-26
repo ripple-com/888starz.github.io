@@ -195,7 +195,7 @@ function initTheme() {
     }
 }
 
-// SUCCESS AND NOTIFICATION SOUNDS
+// SOUND EFFECTS
 function playSuccessSound() {
     try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -214,11 +214,10 @@ function playSuccessSound() {
         osc.start();
         osc.stop(ctx.currentTime + 0.35);
     } catch (e) {
-        console.warn("Audio suppressed:", e);
+        console.warn("Audio error:", e);
     }
 }
 
-// USER NOTIFICATION SOUND FOR AGENT REPLY
 function playNotificationSound() {
     try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -228,8 +227,8 @@ function playNotificationSound() {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.type = "sine";
-        osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.12); // E5
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.12);
         gain.gain.setValueAtTime(0.15, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
         osc.connect(gain);
@@ -237,7 +236,7 @@ function playNotificationSound() {
         osc.start();
         osc.stop(ctx.currentTime + 0.3);
     } catch (e) {
-        console.warn("Notification audio error:", e);
+        console.warn("Notification sound error:", e);
     }
 }
 
@@ -415,9 +414,15 @@ function sendTelegramText(textMessage) {
     });
 }
 
-// TELEGRAM REPLIES POLLING WITH DEDUPLICATION PREVENTING MULTIPLE MESSAGES
+// STRICT DUPLICATE-PREVENTING TELEGRAM POLLING
 let lastTelegramUpdateId = 0;
+let isPollingActive = false;
+const processedTelegramMsgIds = new Set(); 
+
 function pollTelegramAgentReplies() {
+    if (isPollingActive) return;
+    isPollingActive = true;
+
     setInterval(async () => {
         try {
             const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?offset=${lastTelegramUpdateId + 1}`);
@@ -430,14 +435,17 @@ function pollTelegramAgentReplies() {
                     if (update.message && update.message.reply_to_message) {
                         const replyText = update.message.text;
                         const telegramMsgId = update.message.message_id;
-                        const originalMsg = update.message.reply_to_message.text || update.message.reply_to_message.caption || "";
 
-                        // Extract User ID dynamically
+                        // Memory Check to Block Instant Duplicates
+                        if (processedTelegramMsgIds.has(telegramMsgId)) continue;
+                        processedTelegramMsgIds.add(telegramMsgId);
+
+                        const originalMsg = update.message.reply_to_message.text || update.message.reply_to_message.caption || "";
                         const userIdMatch = originalMsg.match(/User ID:\s*([A-Za-z0-9_-]+)/i);
                         const targetUserId = userIdMatch ? userIdMatch[1].trim() : null;
 
                         if (targetUserId) {
-                            // Check if this Telegram reply was already saved to prevent duplicates
+                            // Firestore Database Duplicate Check
                             const checkQuery = query(
                                 chatsCollection, 
                                 where("telegramMsgId", "==", telegramMsgId)
@@ -460,10 +468,10 @@ function pollTelegramAgentReplies() {
         } catch (e) {
             console.warn("Polling error:", e);
         }
-    }, 3000); 
+    }, 3500); 
 }
 
-// LISTEN TO FIRESTORE LIVE CHAT MESSAGES & PLAY SOUND FOR AGENT REPLIES
+// LISTEN TO FIRESTORE LIVE CHATS AND NOTIFY ON AGENT MESSAGES
 let chatUnsubscribe = null;
 let lastMessageCount = 0;
 
@@ -495,14 +503,13 @@ function listenForLiveChats(user) {
             docs.push({ id: doc.id, ...doc.data() });
         });
 
-        // Client-side ordering by timestamp
         docs.sort((a, b) => {
             const timeA = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : a.createdAt) : 0;
             const timeB = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : b.createdAt) : 0;
             return timeA - timeB;
         });
 
-        // Trigger notification sound if a new message arrives from agent
+        // Trigger Notification Sound if new Agent message arrives
         if (docs.length > lastMessageCount && lastMessageCount > 0) {
             const latestMsg = docs[docs.length - 1];
             if (latestMsg && latestMsg.sender === "agent") {
@@ -530,7 +537,6 @@ document.addEventListener("DOMContentLoaded", () => {
     setLanguage(currentLang);
     renderUserInfo(auth.currentUser);
 
-    // LIVE CHAT WIDGET FUNCTIONALITY
     const toggleChatBtn = document.getElementById("toggleChatBtn");
     const closeChatBtn = document.getElementById("closeChatBtn");
     const chatBox = document.getElementById("chatBox");
@@ -555,29 +561,12 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // 1. Clear input field immediately
         chatInput.value = "";
-
-        // 2. Add message to UI IMMEDIATELY
-        const chatMessagesContainer = document.getElementById("chatMessages");
-        if (chatMessagesContainer) {
-            const userMsgDiv = document.createElement("div");
-            userMsgDiv.className = "msg user";
-            userMsgDiv.textContent = text;
-            chatMessagesContainer.appendChild(userMsgDiv);
-            chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
-        }
 
         const userName = localStorage.getItem("userName") || currentUser.displayName || "Guest User";
         const userEmail = currentUser.email || "N/A";
         const userId = currentUser.uid;
 
-        // Check if it's the user's first message for Auto Reply
-        const userQuery = query(chatsCollection, where("userId", "==", userId));
-        const userDocs = await getDocs(userQuery);
-        const isFirstMessage = userDocs.empty;
-
-        // 3. Save User Message to Firestore
         try {
             await addDoc(chatsCollection, {
                 text: text,
@@ -588,22 +577,23 @@ document.addEventListener("DOMContentLoaded", () => {
                 createdAt: serverTimestamp()
             });
 
-            // 4. Send Instant Auto Reply on First Message
-            if (isFirstMessage) {
-                setTimeout(async () => {
-                    await addDoc(chatsCollection, {
-                        text: "සේවා නියෝජිතයකු සමග සම්බන්ධ වෙන තුරු මොහොතක් රැදී සිටින්න.",
-                        sender: "agent",
-                        userId: userId,
-                        createdAt: serverTimestamp()
-                    });
-                }, 800);
+            // Single Auto-Reply Logic
+            const userQuery = query(chatsCollection, where("userId", "==", userId));
+            const userDocs = await getDocs(userQuery);
+            
+            if (userDocs.size <= 1) {
+                await addDoc(chatsCollection, {
+                    text: "සේවා නියෝජිතයකු සමග සම්බන්ධ වෙන තුරු මොහොතක් රැදී සිටින්න.",
+                    sender: "agent",
+                    userId: userId,
+                    autoReply: true,
+                    createdAt: serverTimestamp()
+                });
             }
         } catch (e) {
             console.error("Firestore Save Error:", e);
         }
 
-        // 5. Forward to Telegram Agent Bot
         const caption = `💬 *LIVE CHAT SUPPORT MESSAGE*\n\n` +
                         `👤 *User Name:* ${userName}\n` +
                         `📧 *Email:* ${userEmail}\n` +
@@ -624,7 +614,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.key === "Enter") handleSendMessage();
     });
 
-    // Start Polling for Telegram Agent Replies
     pollTelegramAgentReplies();
 
     const popupCloseBtn = document.getElementById("popupCloseBtn");
@@ -701,7 +690,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // DEPOSIT SUBMIT WITH SELECTED AGENT INFO
     const depositSubmitBtn = document.getElementById("depositSubmitBtn");
     if (depositSubmitBtn) {
         depositSubmitBtn.addEventListener("click", async () => {
@@ -757,7 +745,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // WITHDRAW SUBMIT
     const withdrawSubmitBtn = document.getElementById("withdrawSubmitBtn");
     if (withdrawSubmitBtn) {
         withdrawSubmitBtn.addEventListener("click", async () => {

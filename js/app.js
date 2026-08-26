@@ -5,6 +5,7 @@ import {
     collection, 
     addDoc, 
     query, 
+    where,
     orderBy, 
     onSnapshot, 
     serverTimestamp 
@@ -401,30 +402,51 @@ function pollTelegramAgentReplies() {
                     // Check if message is a reply from Agent
                     if (update.message && update.message.reply_to_message) {
                         const replyText = update.message.text;
-                        
-                        // Save Agent Reply to Firestore
-                        await addDoc(chatsCollection, {
-                            text: replyText,
-                            sender: "agent",
-                            createdAt: serverTimestamp()
-                        });
+                        const originalMsg = update.message.reply_to_message.text || "";
+
+                        // Extract Target User ID from original message text
+                        const userIdMatch = originalMsg.match(/User ID:\s*([^\n]+)/);
+                        const targetUserId = userIdMatch ? userIdMatch[1].trim() : null;
+
+                        if (targetUserId) {
+                            // Save Agent Reply linked to specific User ID
+                            await addDoc(chatsCollection, {
+                                text: replyText,
+                                sender: "agent",
+                                userId: targetUserId,
+                                createdAt: serverTimestamp()
+                            });
+                        }
                     }
                 }
             }
         } catch (e) {
             console.warn("Polling error:", e);
         }
-    }, 3000); // Polls Telegram every 3 seconds
+    }, 3000); 
 }
 
-// LISTEN TO FIRESTORE LIVE CHAT MESSAGES
-function listenForLiveChats() {
+// LISTEN TO FIRESTORE LIVE CHAT MESSAGES FILTERED BY LOGGED IN USER
+let chatUnsubscribe = null;
+function listenForLiveChats(user) {
     const chatMessagesContainer = document.getElementById("chatMessages");
-    const q = query(chatsCollection, orderBy("createdAt", "asc"));
+    if (!chatMessagesContainer) return;
 
-    onSnapshot(q, (snapshot) => {
-        if (!chatMessagesContainer) return;
+    if (chatUnsubscribe) chatUnsubscribe();
 
+    if (!user) {
+        chatMessagesContainer.innerHTML = `<div class="msg agent">කරුණාකර ප්‍රථමයෙන් Login වන්න.</div>`;
+        return;
+    }
+
+    // Filter messages to only show the current logged-in user's chats
+    const q = query(
+        chatsCollection, 
+        where("userId", "==", user.uid), 
+        orderBy("createdAt", "asc")
+    );
+
+    chatUnsubscribe = onSnapshot(q, (snapshot) => {
         chatMessagesContainer.innerHTML = `
             <div class="msg agent">
                 සාදරයෙන් පිළිගන්නවා! ඔබට අවශ්‍ය ඕනෑම සහායක් මෙතැනින් විමසන්න.
@@ -467,27 +489,36 @@ document.addEventListener("DOMContentLoaded", () => {
         const text = chatInput.value.trim();
         if (!text) return;
 
-        chatInput.value = "";
-        const userName = localStorage.getItem("userName") || "Guest User";
-        const userEmail = auth.currentUser ? auth.currentUser.email : (localStorage.getItem("userEmail") || "N/A");
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
+            showToast("Please Log In First!");
+            return;
+        }
 
-        // Save User Message to Firestore
+        chatInput.value = "";
+        const userName = localStorage.getItem("userName") || currentUser.displayName || "Guest User";
+        const userEmail = currentUser.email || "N/A";
+        const userId = currentUser.uid;
+
+        // Save User Message to Firestore linked with userId
         try {
             await addDoc(chatsCollection, {
                 text: text,
                 sender: "user",
                 userName: userName,
                 userEmail: userEmail,
+                userId: userId,
                 createdAt: serverTimestamp()
             });
         } catch (e) {
             console.error("Firestore Save Error:", e);
         }
 
-        // Forward to Telegram Agent Bot with User Email included
+        // Forward to Telegram Agent Bot with Email & User ID
         const caption = `💬 *LIVE CHAT SUPPORT MESSAGE*\n\n` +
                         `👤 *User Name:* ${userName}\n` +
                         `📧 *Email:* ${userEmail}\n` +
+                        `🆔 *User ID:* ${userId}\n` +
                         `💬 *Message:* ${text}\n` +
                         `⏰ *Time:* ${new Date().toLocaleTimeString()}\n\n` +
                         `👉 *Reply to this message to send reply to user.*`;
@@ -504,8 +535,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.key === "Enter") handleSendMessage();
     });
 
-    // Start Live Sync and Polling
-    listenForLiveChats();
+    // Start Polling for Telegram Agent Replies
     pollTelegramAgentReplies();
 
     const popupCloseBtn = document.getElementById("popupCloseBtn");
@@ -607,9 +637,11 @@ document.addEventListener("DOMContentLoaded", () => {
             depositSubmitBtn.textContent = "...";
 
             const userId = user ? user.uid : "guest";
+            const userEmail = user ? user.email : "N/A";
             const caption = `📌 *NEW DEPOSIT REQUEST*\n\n` +
                             `👤 *Selected Agent:* ${selectedAgentName}\n` +
                             `👤 *Name:* ${name}\n` +
+                            `📧 *Email:* ${userEmail}\n` +
                             `🎮 *Game ID:* ${gameId}\n` +
                             `💰 *Amount:* LKR ${amount}\n` +
                             `📱 *WhatsApp:* ${whatsapp}\n` +
@@ -657,8 +689,10 @@ document.addEventListener("DOMContentLoaded", () => {
             withdrawSubmitBtn.textContent = "...";
 
             const userId = user ? user.uid : "guest";
+            const userEmail = user ? user.email : "N/A";
             const textMessage = `🔻 *NEW WITHDRAWAL REQUEST*\n\n` +
                                 `👤 *Name:* ${name}\n` +
+                                `📧 *Email:* ${userEmail}\n` +
                                 `🎮 *Game ID:* ${gameId}\n` +
                                 `💰 *Amount:* LKR ${amount}\n` +
                                 `📱 *WhatsApp:* ${whatsapp}\n` +
@@ -685,12 +719,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
+// AUTHENTICATION LISTENER (LISTEN & FILTER PER USER)
 onAuthStateChanged(auth, (user) => {
     if (user) {
         localStorage.setItem("firebaseLoggedIn", "true");
         localStorage.setItem("userName", user.displayName || "");
         localStorage.setItem("userEmail", user.email || "");
+        localStorage.setItem("userId", user.uid);
         renderUserInfo(user);
+        
+        // Start listening to live chat for ONLY logged-in user
+        listenForLiveChats(user);
     } else {
         const isLogged = localStorage.getItem("firebaseLoggedIn");
         if (!isLogged && !window.location.pathname.includes("login.html")) {

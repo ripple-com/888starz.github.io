@@ -22,11 +22,13 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// ONLINE AGENTS DATA & BANK DETAILS
+// ONLINE AGENTS LIST FOR DEPOSIT SUGGESTIONS
 const onlineAgents = [
     {
+        id: "agent_suwahas",
         name: "Agent Suwahas (VIP Agent)",
         avatar: "S1",
+        role: "Assigned Agent for Deposit (Fast & 24/7)",
         banks: [
             { bankName: "Commercial Bank", accNum: "8009847120", accName: "S. Sathsara" },
             { bankName: "Bank of Ceylon (BOC)", accNum: "89124410", accName: "S. Sathsara" },
@@ -34,11 +36,23 @@ const onlineAgents = [
         ]
     },
     {
+        id: "agent_nimal",
         name: "Agent Nimal (Online Fast)",
         avatar: "A2",
+        role: "Verified Agent (Instant Transfer)",
         banks: [
             { bankName: "Commercial Bank", accNum: "8120098112", accName: "K. Nimal" },
             { bankName: "HNB Bank", accNum: "0030104881", accName: "K. Nimal" }
+        ]
+    },
+    {
+        id: "agent_kamal",
+        name: "Agent Kamal (Express)",
+        avatar: "A3",
+        role: "Authorized Deposit Partner",
+        banks: [
+            { bankName: "Commercial Bank", accNum: "8772349001", accName: "W. Kamal" },
+            { bankName: "BOC Bank", accNum: "7611094321", accName: "W. Kamal" }
         ]
     }
 ];
@@ -55,7 +69,7 @@ const translations = {
         btnDeposit: "Deposit", btnDepositSub: "Submit payment receipt", btnWithdraw: "Withdrawal", btnWithdrawSub: "Request withdrawal",
         btnLogout: "Logout", descLogout: "Sign out from your account", homeNotice: "This is an independent agent service and is not the official 888Starz website.",
         depositTitle: "Deposit Request", depositDesc: "Transfer funds to the agent bank account below and upload the payment receipt.",
-        lblReceipt: "PAYMENT RECEIPT", txtUpload: "Upload Receipt", lblAmount: "DEPOSIT AMOUNT", lblName: "NAME", lblGameId: "GAME ID",
+        lblSelectAgent: "SELECT AGENT", lblReceipt: "PAYMENT RECEIPT", txtUpload: "Upload Receipt", lblAmount: "DEPOSIT AMOUNT", lblName: "NAME", lblGameId: "GAME ID",
         lblWhatsapp: "WHATSAPP NUMBER", btnSubmitDeposit: "SUBMIT DEPOSIT REQUEST",
         withdrawTitle: "Withdrawal Request", withdrawDesc: "Enter your details for withdrawal processing.", txtImportant: "Important",
         txtWithdrawInfo: "Please double-check all details before submitting your withdrawal request.",
@@ -79,7 +93,7 @@ const translations = {
         btnDeposit: "තැන්පතු (Deposit)", btnDepositSub: "ගෙවීම් රිසිට්පත යොමු කරන්න", btnWithdraw: "මුදල් ගැනීම (Withdrawal)", btnWithdrawSub: "මුදල් ලබාගැනීමට ඉල්ලන්න",
         btnLogout: "ඉවත් වන්න (Logout)", descLogout: "ගිණුමෙන් ඉවත් වන්න", homeNotice: "මෙය ස්වාධීන නියෝජිත සේවාවක් වන අතර 888Starz නිල වෙබ් අඩවිය නොවේ.",
         depositTitle: "තැන්පතු ඉල්ලීම", depositDesc: "පහත නියෝජිත බැංකු ගිණුමකට මුදල් බැර කර රිසිට්පත Upload කරන්න.",
-        lblReceipt: "ගෙවීම් රිසිට්පත", txtUpload: "රිසිට්පත Upload කරන්න", lblAmount: "තැන්පතු මුදල", lblName: "ඔබේ නම", lblGameId: "ගිණුම් අංකය (Game ID)",
+        lblSelectAgent: "නියෝජිතයා (Agent) තෝරන්න", lblReceipt: "ගෙවීම් රිසිට්පත", txtUpload: "රිසිට්පත Upload කරන්න", lblAmount: "තැන්පතු මුදල", lblName: "ඔබේ නම", lblGameId: "ගිණුම් අංකය (Game ID)",
         lblWhatsapp: "WHATSAPP අංකය", btnSubmitDeposit: "තැන්පතු ඉල්ලීම යොමු කරන්න",
         withdrawTitle: "මුදල් ලබාගැනීමේ ඉල්ලීම", withdrawDesc: "මුදල් ආපසු ගැනීම සඳහා ඔබගේ විස්තර ඇතුළත් කරන්න.", txtImportant: "වැදගත්",
         txtWithdrawInfo: "තොරතුරු යැවීමට පෙර සියලුම විස්තර නිවැරදි දැයි නැවත පරීක්ෂා කරන්න.",
@@ -103,7 +117,7 @@ const translations = {
         btnDeposit: "வைப்பு (Deposit)", btnDepositSub: "ரசீதை சமர்ப்பிக்கவும்", btnWithdraw: "திரும்பப் பெறல்", btnWithdrawSub: "பணத்தை கோருங்கள்",
         btnLogout: "வெளியேறு", descLogout: "கணக்கிலிருந்து வெளியேறவும்", homeNotice: "இது ஒரு சுயாதீன முகவர் சேவையாகும், அதிகாரப்பூர்வ வலைத்தளம் அல்ல.",
         depositTitle: "வைப்பு கோரிக்கை", depositDesc: "கீழேயுள்ள முகவர் வங்கி கணக்கிற்கு பணம் அனுப்பி ரசீதை பதிவேற்றவும்.",
-        lblReceipt: "பணம் செலுத்திய ரசீது", txtUpload: "ரசீதை பதிவேற்றவும்", lblAmount: "வைப்புத் தொகை", lblName: "பெயர்", lblGameId: "கேம் ஐடி (Game ID)",
+        lblSelectAgent: "முகவரைத் தேர்ந்தெடுக்கவும்", lblReceipt: "பணம் செலுத்திய ரசீது", txtUpload: "ரசீதை பதிவேற்றவும்", lblAmount: "வைப்புத் தொகை", lblName: "பெயர்", lblGameId: "கேம் ஐடி (Game ID)",
         lblWhatsapp: "வாட்ஸ்அப் எண்", btnSubmitDeposit: "வைப்பு கோரிக்கையை சமர்ப்பிக்கவும்",
         withdrawTitle: "திரும்பப் பெறல் கோரிக்கை", withdrawDesc: "செயலாக்கத்திற்கு உங்கள் விவரங்களை உள்ளிடவும்.", txtImportant: "முக்கியமானது",
         txtWithdrawInfo: "சமர்ப்பிப்பதற்கு முன் அனைத்து விவரங்களையும் மீண்டும் சரிபார்க்கவும்.",
@@ -193,20 +207,29 @@ function playSuccessSound() {
     }
 }
 
-// LOAD ONLINE AGENT AND BANK ACCOUNTS DYNAMICALLY
-function setupOnlineAgent() {
-    const selectedAgent = onlineAgents[Math.floor(Math.random() * onlineAgents.length)];
-    
+// RENDER AGENT DETAILS WITH POD-STYLE ANIMATION
+function renderSelectedAgent(agent) {
     const nameEl = document.getElementById("agentName");
+    const roleEl = document.getElementById("agentRole");
     const avatarEl = document.getElementById("agentAvatar");
+    const cardEl = document.getElementById("agentStatusCard");
     const bankContainer = document.getElementById("bankCardsContainer");
 
-    if (nameEl) nameEl.textContent = selectedAgent.name;
-    if (avatarEl) avatarEl.textContent = selectedAgent.avatar;
+    if (nameEl) nameEl.textContent = agent.name;
+    if (roleEl) roleEl.textContent = agent.role;
+    if (avatarEl) avatarEl.textContent = agent.avatar;
 
+    // Trigger Pod-Style Animation
+    if (cardEl) {
+        cardEl.classList.remove("pod-style");
+        void cardEl.offsetWidth; // Force Reflow
+        cardEl.classList.add("pod-style");
+    }
+
+    // Render Bank Cards with Animation
     if (bankContainer) {
-        bankContainer.innerHTML = selectedAgent.banks.map(bank => `
-            <div class="bank-card-item">
+        bankContainer.innerHTML = agent.banks.map(bank => `
+            <div class="bank-card-item fade-in">
                 <div class="bank-header">
                     <span class="bank-name">${bank.bankName}</span>
                     <button class="copy-btn" onclick="copyAccNumber('${bank.accNum}')">
@@ -219,6 +242,21 @@ function setupOnlineAgent() {
             </div>
         `).join('');
     }
+}
+
+// INITIALIZE AGENT DROPDOWN & SUGGESTIONS
+function setupOnlineAgentSystem() {
+    const selectEl = document.getElementById("agentSelect");
+    if (!selectEl) return;
+
+    selectEl.innerHTML = onlineAgents.map(ag => `<option value="${ag.id}">${ag.name}</option>`).join("");
+
+    renderSelectedAgent(onlineAgents[0]);
+
+    selectEl.addEventListener("change", (e) => {
+        const found = onlineAgents.find(a => a.id === e.target.value);
+        if (found) renderSelectedAgent(found);
+    });
 }
 
 // COPY TO CLIPBOARD FUNCTION
@@ -279,7 +317,7 @@ function showPage(page) {
     });
     
     if (page === "deposit") {
-        setupOnlineAgent();
+        setupOnlineAgentSystem();
     }
     
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -431,7 +469,7 @@ document.addEventListener("DOMContentLoaded", () => {
         whatsappBtn.addEventListener("click", () => window.open("https://wa.me/94702883324", "_blank"));
     }
 
-    // DEPOSIT SUBMIT
+    // DEPOSIT SUBMIT WITH SELECTED AGENT INFO
     const depositSubmitBtn = document.getElementById("depositSubmitBtn");
     if (depositSubmitBtn) {
         depositSubmitBtn.addEventListener("click", async () => {
@@ -444,6 +482,9 @@ document.addEventListener("DOMContentLoaded", () => {
             const fileInput = document.getElementById("receipt");
             const file = fileInput ? fileInput.files[0] : null;
 
+            const agentSelectEl = document.getElementById("agentSelect");
+            const selectedAgentName = agentSelectEl ? agentSelectEl.options[agentSelectEl.selectedIndex].text : "Agent Suwahas";
+
             if (!file || !amount || !name || !gameId || !whatsapp) {
                 showCustomModal("Attention", t.msgFillAll, "error");
                 return;
@@ -454,6 +495,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const userId = user ? user.uid : "guest";
             const caption = `📌 *NEW DEPOSIT REQUEST*\n\n` +
+                            `👤 *Selected Agent:* ${selectedAgentName}\n` +
                             `👤 *Name:* ${name}\n` +
                             `🎮 *Game ID:* ${gameId}\n` +
                             `💰 *Amount:* LKR ${amount}\n` +

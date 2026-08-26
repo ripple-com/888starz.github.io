@@ -94,7 +94,7 @@ button { cursor:pointer; }
 .slide-content h2 { margin-top:8px; font-size:27px; line-height:1.03; letter-spacing:-.7px; }
 .slide-content p { margin-top:8px; color:#bbb; font-size:9px; line-height:1.5; }
 .slider-dots { position:absolute; z-index:5; right:18px; bottom:14px; display:flex; align-items:center; gap:5px; }
-.slider-dot { width:6px; height:6px; border-radius:50%; background:#777; transition:.25s; cursor:pointer; }
+.slider-dot { width:6px; height:6px; border-radius:50%; background:#777; transition:.25s; }
 .slider-dot.active { width:18px; border-radius:10px; background:var(--orange); }
 
 /* ACTIONS */
@@ -493,13 +493,13 @@ button { cursor:pointer; }
 
 <body>
 
-<div id="toast" class="toast-msg">Copied to clipboard!</div>
+<div id="toast" class="toast-msg">Account Number Copied!</div>
 
 <header class="header">
     <div class="container header-inner">
         <div class="logo">888<span>STARZ</span> AGENT</div>
         <div class="profile-avatar" id="headerProfileAvatar" title="Profile">
-            <span id="avatarText">S</span>
+            <span id="avatarText">U</span>
         </div>
     </div>
 </header>
@@ -536,9 +536,9 @@ button { cursor:pointer; }
                     </div>
                 </div>
                 <div class="slider-dots">
-                    <span class="slider-dot active" data-slide="0"></span>
-                    <span class="slider-dot" data-slide="1"></span>
-                    <span class="slider-dot" data-slide="2"></span>
+                    <span class="slider-dot active"></span>
+                    <span class="slider-dot"></span>
+                    <span class="slider-dot"></span>
                 </div>
             </div>
 
@@ -579,7 +579,7 @@ button { cursor:pointer; }
             <!-- ONLINE AGENT CARD (POD-STYLE ANIMATED) -->
             <div class="agent-status-card" id="agentStatusCard">
                 <div class="agent-info">
-                    <div class="agent-avatar" id="agentAvatar">S1</div>
+                    <div class="agent-avatar" id="agentAvatar">A1</div>
                     <div class="agent-details">
                         <strong id="agentName">Agent Suwahas (Official)</strong>
                         <span id="agentRole">Assigned Agent for Deposit</span>
@@ -590,14 +590,16 @@ button { cursor:pointer; }
                 </div>
             </div>
 
-            <!-- TIME NOTICE -->
+            <!-- 15 MINUTE TIME NOTICE -->
             <div class="time-notice">
-                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 16 14"/></svg>
                 <span>සාමාන්‍ය Deposit කාලය: විනාඩි 15 යි (Max 15 Mins)</span>
             </div>
 
-            <!-- AVAILABLE BANK ACCOUNTS -->
-            <div class="bank-cards-list" id="bankCardsContainer"></div>
+            <!-- AVAILABLE BANK ACCOUNTS (DYNAMICALLY LOADED) -->
+            <div class="bank-cards-list" id="bankCardsContainer">
+                <!-- JS handles rendering bank cards here -->
+            </div>
 
             <div class="form-card">
                 <div class="form-group">
@@ -612,7 +614,7 @@ button { cursor:pointer; }
                         <input type="file" id="receipt" accept="image/*">
                     </div>
                 </div>
-                <div class="form-group"><label data-i18n="lblAmount">DEPOSIT AMOUNT (LKR)</label><input type="number" id="depositAmount" placeholder="Enter deposit amount"></div>
+                <div class="form-group"><label data-i18n="lblAmount">DEPOSIT AMOUNT</label><input type="number" id="depositAmount" placeholder="Enter deposit amount"></div>
                 <div class="form-group"><label data-i18n="lblName">NAME</label><input type="text" id="depositName" placeholder="Enter your name"></div>
                 <div class="form-group"><label data-i18n="lblGameId">GAME ID</label><input type="text" id="gameId" placeholder="Enter your Game ID"></div>
                 <div class="form-group"><label data-i18n="lblWhatsapp">WHATSAPP NUMBER</label><input type="tel" id="depositWhatsapp" placeholder="Enter WhatsApp number"></div>
@@ -621,7 +623,6 @@ button { cursor:pointer; }
         </div>
     </section>
 
-    <!-- WITHDRAW PAGE -->
     <section id="withdrawPage" class="page">
         <div class="container">
             <div class="page-header">
@@ -636,15 +637,14 @@ button { cursor:pointer; }
             <div class="form-card">
                 <div class="form-group"><label data-i18n="lblName">NAME</label><input type="text" id="withdrawName" placeholder="Enter your name"></div>
                 <div class="form-group"><label data-i18n="lblGameId">GAME ID</label><input type="text" id="withdrawGameId" placeholder="Enter your Game ID"></div>
-                <div class="form-group"><label data-i18n="lblWithdrawAmount">WITHDRAWAL AMOUNT (LKR)</label><input type="number" id="withdrawAmount" placeholder="Enter withdrawal amount"></div>
+                <div class="form-group"><label data-i18n="lblWithdrawAmount">WITHDRAWAL AMOUNT</label><input type="number" id="withdrawAmount" placeholder="Enter withdrawal amount"></div>
                 <div class="form-group"><label data-i18n="lblWhatsapp">WHATSAPP NUMBER</label><input type="tel" id="withdrawWhatsapp" placeholder="Enter WhatsApp number"></div>
-                <div class="form-group"><label data-i18n="lblBankDetails">PAYMENT / BANK DETAILS</label><input type="text" id="withdrawDetails" placeholder="Bank Name, Acc No, Branch Name"></div>
+                <div class="form-group"><label data-i18n="lblBankDetails">PAYMENT / BANK DETAILS</label><input type="text" id="withdrawDetails" placeholder="Enter payment details"></div>
                 <button class="submit-btn" id="withdrawSubmitBtn" data-i18n="btnSubmitWithdraw">SUBMIT WITHDRAWAL REQUEST</button>
             </div>
         </div>
     </section>
 
-    <!-- SETTINGS PAGE -->
     <section id="settingsPage" class="page">
         <div class="container">
             <div class="page-header">
@@ -653,9 +653,9 @@ button { cursor:pointer; }
             </div>
             <div class="settings-list">
                 <div class="setting-item user-profile-item">
-                    <div class="user-avatar-large" id="settingAvatarText">S</div>
+                    <div class="user-avatar-large" id="settingAvatarText">U</div>
                     <div class="setting-info">
-                        <strong id="userName">Suwahas Account</strong>
+                        <strong id="userName">User Account</strong>
                         <small id="userEmail">Active Session</small>
                     </div>
                 </div>
@@ -780,7 +780,7 @@ button { cursor:pointer; }
 <!-- DYNAMIC STYLED POPUP MODAL -->
 <div id="successPopup" class="popup-overlay">
     <div class="popup-card">
-        <div class="popup-icon" id="popupIcon">
+        <div class="popup-icon">
             <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" fill="none" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
         </div>
         <h2 class="popup-title" id="popupTitle">Success!</h2>
@@ -789,448 +789,6 @@ button { cursor:pointer; }
     </div>
 </div>
 
-<!-- EMBEDDED JAVASCRIPT SYSTEM -->
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    // 1. DATA CONFIGURATION
-    const agentsData = [
-        {
-            id: "agent_suwahas",
-            name: "Agent Suwahas (Official)",
-            avatar: "S1",
-            role: "Assigned Primary Deposit Agent",
-            banks: [
-                { bank: "Commercial Bank", account: "8009123456", name: "K A S PERERA", branch: "Colombo Main" },
-                { bank: "Bank of Ceylon (BOC)", account: "75443109", name: "K A S PERERA", branch: "Kandy" },
-                { bank: "Ez Cash / mCash", account: "0771234567", name: "SUWAHAS ENTERPRISES", branch: "Digital Wallet" }
-            ]
-        },
-        {
-            id: "agent_vip",
-            name: "Agent Express (VIP Fast)",
-            avatar: "A2",
-            role: "Instant 5-Min Processing Agent",
-            banks: [
-                { bank: "Hatton National Bank (HNB)", account: "003010459871", name: "EXPRESS TRANSACTIONS", branch: "City Branch" },
-                { bank: "Sampath Bank", account: "100954321102", name: "EXPRESS TRANSACTIONS", branch: "Metro Branch" }
-            ]
-        }
-    ];
-
-    const translations = {
-        en: {
-            subHeader: "INDEPENDENT AGENT SERVICE",
-            heroDescription: "888Starz deposit and withdrawal assistance. Verify payment details with agent before any transaction.",
-            slide1Small: "FAST SERVICE", slide1Title: "Deposit<br>Made Easy", slide1Desc: "Upload your receipt and submit your deposit details.",
-            slide2Small: "EASY WITHDRAWAL", slide2Title: "Quick<br>Withdrawal", slide2Desc: "Send your withdrawal request through our agent.",
-            slide3Small: "24 / 7 SUPPORT", slide3Title: "Agent<br>Support", slide3Desc: "Get assistance whenever you need it.",
-            btnDeposit: "Deposit", btnDepositSub: "Submit payment receipt",
-            btnWithdraw: "Withdrawal", btnWithdrawSub: "Request withdrawal",
-            homeNotice: "This is an independent agent service and is not the official 888Starz website.",
-            depositTitle: "Deposit Request", depositDesc: "Deposit money into the account below and upload receipt.",
-            lblSelectAgent: "SELECT AGENT", lblReceipt: "PAYMENT RECEIPT", txtUpload: "Upload Receipt",
-            lblAmount: "DEPOSIT AMOUNT (LKR)", lblName: "NAME", lblGameId: "GAME ID", lblWhatsapp: "WHATSAPP NUMBER",
-            btnSubmitDeposit: "SUBMIT DEPOSIT REQUEST", withdrawTitle: "Withdrawal Request",
-            withdrawDesc: "Enter details for withdrawal request.", txtImportant: "Important",
-            txtWithdrawInfo: "Please ensure all details are correct before submitting.",
-            lblWithdrawAmount: "WITHDRAWAL AMOUNT (LKR)", lblBankDetails: "PAYMENT / BANK DETAILS",
-            btnSubmitWithdraw: "SUBMIT WITHDRAWAL REQUEST", navHome: "Home", navDeposit: "Deposit",
-            navWithdraw: "Withdrawal", navSettings: "Setting", titleSettings: "Settings",
-            lblTheme: "Dark Mode", descTheme: "Switch between Light and Dark mode",
-            lblLanguage: "Language", descLanguage: "Select system language",
-            lblNotif: "Notifications", descNotif: "Receive transaction updates",
-            lblSupport: "Agent Support", descSupport: "Open Live Chat Support",
-            btnLogout: "Logout", descLogout: "Sign out from your account"
-        },
-        si: {
-            subHeader: "ස්වාධීන ඒජන්ට් සේවාව",
-            heroDescription: "888Starz ගිණුම් සඳහා Deposit සහ Withdrawal පහසුකම්. ගනුදෙනුවට පෙර ඒජන්ට් සමඟ විස්තර පරීක්ෂා කරන්න.",
-            slide1Small: "වේගවත් සේවාව", slide1Title: "Deposit කිරීම<br>පහසුවෙන්", slide1Desc: "රිසිට්පත Upload කර ඔබගේ Deposit විස්තර යොමු කරන්න.",
-            slide2Small: "පහසු මුදල් ලබාගැනීම", slide2Title: "ඉක්මන්<br>Withdrawal", slide2Desc: "අපගේ Agent හරහා ඉක්මනින් මුදල් ලබා ගන්න.",
-            slide3Small: "24 / 7 සහාය", slide3Title: "Agent<br>සහාය", slide3Desc: "ඕනෑම වෙලාවක අපගේ සහාය ලබා ගන්න.",
-            btnDeposit: "Deposit", btnDepositSub: "රිසිට්පත යොමු කරන්න",
-            btnWithdraw: "Withdrawal", btnWithdrawSub: "මුදල් ලබාගන්න",
-            homeNotice: "මෙය ස්වාධීන ඒජන්ට් සේවාවක් වන අතර 888Starz නිල වෙබ් අඩවිය නොවේ.",
-            depositTitle: "Deposit ඉල්ලීම", depositDesc: "පහත බැංකු ගිණුමකට මුදල් තැන්පත් කර රිසිට්පත Upload කරන්න.",
-            lblSelectAgent: "AGENT තෝරන්න", lblReceipt: "ගෙවීම් රිසිට්පත", txtUpload: "රිසිට්පත Upload කරන්න",
-            lblAmount: "DEPOSIT මුදල (LKR)", lblName: "ඔබගේ නම", lblGameId: "GAME ID එක", lblWhatsapp: "WHATSAPP අංකය",
-            btnSubmitDeposit: "DEPOSIT REQUEST එක යවන්න", withdrawTitle: "Withdrawal ඉල්ලීම",
-            withdrawDesc: "Withdrawal request එක සඳහා ඔබගේ details ඇතුළත් කරන්න.", txtImportant: "වැදගත්",
-            txtWithdrawInfo: "විස්තර යැවීමට පෙර සියලුම තොරතුරු නිවැරදි බව තහවුරු කරන්න.",
-            lblWithdrawAmount: "WITHDRAWAL මුදල (LKR)", lblBankDetails: "ලබාගත යුතු බැංකු විස්තර",
-            btnSubmitWithdraw: "WITHDRAWAL REQUEST එක යවන්න", navHome: "මුල් පිටුව", navDeposit: "Deposit",
-            navWithdraw: "Withdrawal", navSettings: "සිටින්ස්", titleSettings: "සිටින්ස්",
-            lblTheme: "Dark Mode", descTheme: "Light සහ Dark මාදිලිය මාරු කරන්න",
-            lblLanguage: "භාෂාව", descLanguage: "පද්ධති භාෂාව තෝරන්න",
-            lblNotif: "දැනුම්දීම්", descNotif: "ගනුදෙනු යාවත්කාලීන ලබාගන්න",
-            lblSupport: "Agent සහාය", descSupport: "සජීවී Chat සහාය ලබාගන්න",
-            btnLogout: "ඉවත් වන්න", descLogout: "ගිණුමෙන් Sign out වන්න"
-        },
-        ta: {
-            subHeader: "சுயாதீன ஏஜென்ட் சேவை",
-            heroDescription: "888Starz வாடிக்கையாளர்களுக்கு வைப்பு மற்றும் திரும்பப்பெறுதல் உதவி.",
-            slide1Small: "வேகமான சேவை", slide1Title: "வைப்பு செய்ய<br>எளிதான வழி", slide1Desc: "ரசீதை பதிவேற்றி உங்கள் விவரங்களை அனுப்பவும்.",
-            slide2Small: "எளிதான பணம்பெறுதல்", slide2Title: "வேகமான<br>திரும்பப்பெறுதல்", slide2Desc: "எங்கள் ஏஜென்ட் மூலம் பணத்தை உடனடியாகப் பெறுங்கள்.",
-            slide3Small: "24 / 7 ஆதரவு", slide3Title: "ஏஜென்ட்<br>ஆதரவு", slide3Desc: "உங்களுக்கு தேவையான நேரத்தில் உதவி பெறுங்கள்.",
-            btnDeposit: "டெபாசிட்", btnDepositSub: "ரசீதை சமர்ப்பிக்கவும்",
-            btnWithdraw: "திரும்பப்பெறுதல்", btnWithdrawSub: "பணத்தைக் கோருங்கள்",
-            homeNotice: "இது ஒரு சுயாதீன ஏஜென்ட் சேவையாகும், இது அதிகாரப்பூர்வ 888Starz வலைத்தளம் அல்ல.",
-            depositTitle: "டெபாசிட் கோரிக்கை", depositDesc: "கீழே உள்ள வங்கிக் கணக்கில் பணம் செலுத்தி ரசீதைப் பதிவேற்றவும்.",
-            lblSelectAgent: "ஏஜென்ட்டைத் தேர்ந்தெடுக்கவும்", lblReceipt: "பணம் செலுத்திய ரசீது", txtUpload: "ரசீதை பதிவேற்றவும்",
-            lblAmount: "டெபாசிட் தொகை (LKR)", lblName: "பெயர்", lblGameId: "கேம் ID", lblWhatsapp: "வாட்ஸ்அப் எண்",
-            btnSubmitDeposit: "டெபாசிட் கோரிக்கையை அனுப்பவும்", withdrawTitle: "திரும்பப்பெறும் கோரிக்கை",
-            withdrawDesc: "திரும்பப்பெறுதலுக்கான விவரங்களை உள்ளிடவும்.", txtImportant: "முக்கியமானது",
-            txtWithdrawInfo: "சமர்ப்பிப்பதற்கு முன் அனைத்து தகவல்களும் சரியானவை என்பதை உறுதிப்படுத்தவும்.",
-            lblWithdrawAmount: "திரும்பப்பெறும் தொகை (LKR)", lblBankDetails: "வங்கி விவரங்கள்",
-            btnSubmitWithdraw: "கோரிக்கையை அனுப்பவும்", navHome: "முகப்பு", navDeposit: "டெபாசிட்",
-            navWithdraw: "திரும்பப்பெறல்", navSettings: "அமைப்புகள்", titleSettings: "அமைப்புகள்",
-            lblTheme: "டார்க் மோட்", descTheme: "லைட் மற்றும் டார்க் மோடை மாற்றவும்",
-            lblLanguage: "மொழி", descLanguage: "மொழியைத் தேர்ந்தெடுக்கவும்",
-            lblNotif: "அறிவிப்புகள்", descNotif: "பரிவர்த்தனை அறிவிப்புகள்",
-            lblSupport: "ஏஜென்ட் ஆதரவு", descSupport: "நேரலை சேட் ஆதரவு",
-            btnLogout: "வெளியேறு", descLogout: "கணக்கிலிருந்து வெளியேறவும்"
-        }
-    };
-
-    // 2. DOM ELEMENTS
-    const pages = document.querySelectorAll(".page");
-    const navButtons = document.querySelectorAll(".nav-btn");
-    const agentSelect = document.getElementById("agentSelect");
-    const agentStatusCard = document.getElementById("agentStatusCard");
-    const agentAvatar = document.getElementById("agentAvatar");
-    const agentName = document.getElementById("agentName");
-    const agentRole = document.getElementById("agentRole");
-    const bankCardsContainer = document.getElementById("bankCardsContainer");
-    const receiptInput = document.getElementById("receipt");
-    const receiptPreview = document.getElementById("receiptPreview");
-    const uploadContent = document.getElementById("uploadContent");
-    const depositSubmitBtn = document.getElementById("depositSubmitBtn");
-    const withdrawSubmitBtn = document.getElementById("withdrawSubmitBtn");
-    
-    // UI Elements
-    const toast = document.getElementById("toast");
-    const successPopup = document.getElementById("successPopup");
-    const popupTitle = document.getElementById("popupTitle");
-    const popupMessage = document.getElementById("popupMessage");
-    const popupCloseBtn = document.getElementById("popupCloseBtn");
-    
-    // Chat Elements
-    const toggleChatBtn = document.getElementById("toggleChatBtn");
-    const closeChatBtn = document.getElementById("closeChatBtn");
-    const chatBox = document.getElementById("chatBox");
-    const sendChatBtn = document.getElementById("sendChatBtn");
-    const chatInput = document.getElementById("chatInput");
-    const chatMessages = document.getElementById("chatMessages");
-    const openChatFromSettings = document.getElementById("openChatFromSettings");
-
-    // Settings Elements
-    const toggleThemeBtn = document.getElementById("toggleThemeBtn");
-    const toggleNotifBtn = document.getElementById("toggleNotifBtn");
-    const langOptionCards = document.querySelectorAll(".lang-option-card");
-    const logoutBtn = document.getElementById("logoutBtn");
-
-    // 3. PAGE NAVIGATION SYSTEM
-    function switchPage(targetPageId) {
-        pages.forEach(p => p.classList.remove("active"));
-        navButtons.forEach(b => b.classList.remove("active"));
-
-        const targetPage = document.getElementById(targetPageId + "Page");
-        if(targetPage) {
-            targetPage.classList.add("active");
-            window.scrollTo({ top: 0, behavior: "smooth" });
-        }
-
-        const activeNavBtn = document.querySelector(`.nav-btn[data-page="${targetPageId}"]`);
-        if(activeNavBtn) activeNavBtn.classList.add("active");
-    }
-
-    navButtons.forEach(btn => {
-        btn.addEventListener("click", () => {
-            const pageId = btn.getAttribute("data-page");
-            switchPage(pageId);
-        });
-    });
-
-    document.querySelectorAll(".quick-card").forEach(card => {
-        card.addEventListener("click", () => {
-            const pageId = card.getAttribute("data-page");
-            switchPage(pageId);
-        });
-    });
-
-    document.getElementById("headerProfileAvatar").addEventListener("click", () => switchPage("settings"));
-
-    // 4. SLIDER SYSTEM
-    const slides = document.querySelectorAll(".slide");
-    const sliderDots = document.querySelectorAll(".slider-dot");
-    let currentSlide = 0;
-    let slideInterval;
-
-    function showSlide(index) {
-        slides.forEach((s, i) => s.classList.toggle("active", i === index));
-        sliderDots.forEach((d, i) => d.classList.toggle("active", i === index));
-        currentSlide = index;
-    }
-
-    function nextSlide() {
-        let index = (currentSlide + 1) % slides.length;
-        showSlide(index);
-    }
-
-    function startSlider() {
-        slideInterval = setInterval(nextSlide, 4500);
-    }
-
-    sliderDots.forEach(dot => {
-        dot.addEventListener("click", (e) => {
-            clearInterval(slideInterval);
-            const idx = parseInt(e.target.getAttribute("data-slide"));
-            showSlide(idx);
-            startSlider();
-        });
-    });
-    startSlider();
-
-    // 5. AGENTS & BANK CARDS SYSTEM
-    function initAgents() {
-        agentSelect.innerHTML = "";
-        agentsData.forEach(agent => {
-            const option = document.createElement("option");
-            option.value = agent.id;
-            option.textContent = agent.name;
-            agentSelect.appendChild(option);
-        });
-        renderSelectedAgent(agentsData[0].id);
-    }
-
-    function renderSelectedAgent(agentId) {
-        const agent = agentsData.find(a => a.id === agentId);
-        if(!agent) return;
-
-        // Pod-style Animation
-        agentStatusCard.classList.remove("pod-style");
-        void agentStatusCard.offsetWidth; // Trigger Reflow
-        agentStatusCard.classList.add("pod-style");
-
-        agentAvatar.textContent = agent.avatar;
-        agentName.textContent = agent.name;
-        agentRole.textContent = agent.role;
-
-        // Render Bank Cards
-        bankCardsContainer.innerHTML = "";
-        agent.banks.forEach((b, index) => {
-            const cardHtml = `
-                <div class="bank-card-item fade-in" style="animation-delay: ${index * 0.1}s">
-                    <div class="bank-header">
-                        <span class="bank-name">${b.bank}</span>
-                        <button class="copy-btn" data-copy="${b.account}">
-                            <svg width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                            COPY
-                        </button>
-                    </div>
-                    <div class="acc-number">${b.account}</div>
-                    <div class="acc-name">${b.name} (${b.branch})</div>
-                </div>
-            `;
-            bankCardsContainer.insertAdjacentHTML("beforeend", cardHtml);
-        });
-
-        // Attach Copy Event Listeners
-        document.querySelectorAll(".copy-btn").forEach(btn => {
-            btn.addEventListener("click", (e) => {
-                const textToCopy = e.currentTarget.getAttribute("data-copy");
-                navigator.clipboard.writeText(textToCopy).then(() => {
-                    showToast("Account Number Copied!");
-                });
-            });
-        });
-    }
-
-    agentSelect.addEventListener("change", (e) => {
-        renderSelectedAgent(e.target.value);
-    });
-
-    initAgents();
-
-    // 6. IMAGE PREVIEW FOR RECEIPT
-    receiptInput.addEventListener("change", function() {
-        const file = this.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                receiptPreview.src = e.target.result;
-                receiptPreview.style.display = "block";
-                uploadContent.style.display = "none";
-            }
-            reader.readAsDataURL(file);
-        }
-    });
-
-    // 7. FORM SUBMISSIONS & MODALS
-    depositSubmitBtn.addEventListener("click", () => {
-        const amount = document.getElementById("depositAmount").value.trim();
-        const name = document.getElementById("depositName").value.trim();
-        const gameId = document.getElementById("gameId").value.trim();
-        const whatsapp = document.getElementById("depositWhatsapp").value.trim();
-        const receipt = receiptInput.files[0];
-
-        if(!amount || !name || !gameId || !whatsapp) {
-            showToast("කරුණාකර සියලුම විස්තර ඇතුළත් කරන්න!");
-            return;
-        }
-
-        if(!receipt) {
-            showToast("කරුණාකර Payment Receipt එක Upload කරන්න!");
-            return;
-        }
-
-        showPopup("Deposit Request Submitted!", `ඔබගේ LKR ${amount} Deposit ඉල්ලීම සාර්ථකව යොමු විය. Agent විසින් විනාඩි 15ක් ඇතුළත එය තහවුරු කරනු ඇත.`);
-        
-        // Form Clear
-        document.getElementById("depositAmount").value = "";
-        document.getElementById("depositName").value = "";
-        document.getElementById("gameId").value = "";
-        document.getElementById("depositWhatsapp").value = "";
-        receiptInput.value = "";
-        receiptPreview.style.display = "none";
-        uploadContent.style.display = "flex";
-    });
-
-    withdrawSubmitBtn.addEventListener("click", () => {
-        const name = document.getElementById("withdrawName").value.trim();
-        const gameId = document.getElementById("withdrawGameId").value.trim();
-        const amount = document.getElementById("withdrawAmount").value.trim();
-        const whatsapp = document.getElementById("withdrawWhatsapp").value.trim();
-        const details = document.getElementById("withdrawDetails").value.trim();
-
-        if(!name || !gameId || !amount || !whatsapp || !details) {
-            showToast("කරුණාකර සියලුම විස්තර ඇතුළත් කරන්න!");
-            return;
-        }
-
-        showPopup("Withdrawal Request Received!", `ඔබගේ LKR ${amount} Withdrawal ඉල්ලීම Agent වෙත ලැබුණි. කෙටි වේලාවකින් මුදල් ඔබගේ ගිණුමට ලැබෙනු ඇත.`);
-
-        // Form Clear
-        document.getElementById("withdrawName").value = "";
-        document.getElementById("withdrawGameId").value = "";
-        document.getElementById("withdrawAmount").value = "";
-        document.getElementById("withdrawWhatsapp").value = "";
-        document.getElementById("withdrawDetails").value = "";
-    });
-
-    function showPopup(title, msg) {
-        popupTitle.textContent = title;
-        popupMessage.textContent = msg;
-        successPopup.classList.add("show");
-    }
-
-    popupCloseBtn.addEventListener("click", () => {
-        successPopup.classList.remove("show");
-    });
-
-    function showToast(text) {
-        toast.textContent = text;
-        toast.classList.add("show");
-        setTimeout(() => toast.classList.remove("show"), 2500);
-    }
-
-    // 8. LIVE CHAT SYSTEM
-    function toggleChat() {
-        chatBox.classList.toggle("open");
-    }
-
-    toggleChatBtn.addEventListener("click", toggleChat);
-    closeChatBtn.addEventListener("click", toggleChat);
-    openChatFromSettings.addEventListener("click", () => {
-        switchPage("home");
-        chatBox.classList.add("open");
-    });
-
-    function handleSendChat() {
-        const text = chatInput.value.trim();
-        if(!text) return;
-
-        // User Message Append
-        const userMsg = document.createElement("div");
-        userMsg.className = "msg user";
-        userMsg.textContent = text;
-        chatMessages.appendChild(userMsg);
-
-        chatInput.value = "";
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-
-        // Auto Agent Response Simulation
-        setTimeout(() => {
-            const agentMsg = document.createElement("div");
-            agentMsg.className = "msg agent";
-            agentMsg.textContent = "ඔබගේ පණිවිඩයට ස්තූතියි! Online Agent සුළු මොහොතකින් සම්බන්ධ වනු ඇත.";
-            chatMessages.appendChild(agentMsg);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }, 1000);
-    }
-
-    sendChatBtn.addEventListener("click", handleSendChat);
-    chatInput.addEventListener("keypress", (e) => {
-        if(e.key === "Enter") handleSendChat();
-    });
-
-    // 9. SETTINGS & LANGUAGE SYSTEM
-    toggleThemeBtn.addEventListener("click", () => {
-        toggleThemeBtn.classList.toggle("on");
-        document.body.classList.toggle("light-mode");
-        const isLight = document.body.classList.contains("light-mode");
-        localStorage.setItem("appTheme", isLight ? "light" : "dark");
-    });
-
-    toggleNotifBtn.addEventListener("click", () => {
-        toggleNotifBtn.classList.toggle("on");
-        showToast(toggleNotifBtn.classList.contains("on") ? "Notifications Enabled" : "Notifications Disabled");
-    });
-
-    function setLanguage(lang) {
-        const dict = translations[lang] || translations.en;
-        document.querySelectorAll("[data-i18n]").forEach(el => {
-            const key = el.getAttribute("data-i18n");
-            if(dict[key]) {
-                el.innerHTML = dict[key];
-            }
-        });
-
-        // Update active class in language cards
-        langOptionCards.forEach(card => {
-            const isSelected = card.getAttribute("data-lang") === lang;
-            card.classList.toggle("active", isSelected);
-            const radio = card.querySelector("input[type='radio']");
-            if(radio) radio.checked = isSelected;
-        });
-
-        localStorage.setItem("appLang", lang);
-    }
-
-    langOptionCards.forEach(card => {
-        card.addEventListener("click", () => {
-            const selectedLang = card.getAttribute("data-lang");
-            setLanguage(selectedLang);
-        });
-    });
-
-    logoutBtn.addEventListener("click", () => {
-        if(confirm("ඔබට මෙම පද්ධතියෙන් ඉවත් වීමට අවශ්‍යද?")) {
-            showToast("Logging out...");
-            setTimeout(() => location.reload(), 1000);
-        }
-    });
-
-    // Load Saved User Settings
-    const savedTheme = localStorage.getItem("appTheme");
-    if(savedTheme === "light") {
-        document.body.classList.add("light-mode");
-        toggleThemeBtn.classList.remove("on");
-    }
-
-    const savedLang = localStorage.getItem("appLang") || "en";
-    setLanguage(savedLang);
-});
-</script>
+<script type="module" src="js/app.js"></script>
 </body>
 </html>

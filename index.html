@@ -365,6 +365,25 @@ button { cursor:pointer; }
     border-bottom-left-radius: 2px;
 }
 
+/* Chat Media Elements Styles */
+.msg img.chat-img-thumb {
+    max-width: 100%;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    margin-top: 4px;
+}
+.msg img.chat-img-thumb:hover {
+    transform: scale(1.02);
+}
+.msg audio {
+    max-width: 210px;
+    height: 36px;
+    margin-top: 4px;
+    outline: none;
+    border-radius: 20px;
+}
+
 .chat-input-area {
     padding: 10px;
     background: var(--card2);
@@ -488,6 +507,40 @@ button { cursor:pointer; }
     font-size: 12px;
     cursor: pointer;
     box-shadow: 0 8px 20px rgba(255, 0, 0, 0.25);
+}
+
+/* IMAGE VIEWER MODAL */
+.image-viewer-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 200000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+.image-viewer-modal.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+.image-viewer-content {
+    max-width: 90%;
+    max-height: 85vh;
+    border-radius: 12px;
+    box-shadow: 0 0 25px rgba(0,0,0,0.8);
+    object-fit: contain;
+}
+.image-viewer-close {
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    color: #fff;
+    font-size: 35px;
+    font-weight: bold;
+    cursor: pointer;
 }
 
 /* TOAST NOTIFICATION */
@@ -822,6 +875,12 @@ button { cursor:pointer; }
         <p class="popup-message" id="popupMessage">Your request has been submitted successfully.</p>
         <button class="popup-btn" id="popupCloseBtn">OK</button>
     </div>
+</div>
+
+<!-- FULLSCREEN IMAGE VIEWER MODAL -->
+<div id="imageViewerModal" class="image-viewer-modal">
+    <span class="image-viewer-close" id="closeImageViewer">&times;</span>
+    <img id="fullImageView" class="image-viewer-content" src="" alt="Full Preview">
 </div>
 
 <script type="module" src="js/app.js"></script>

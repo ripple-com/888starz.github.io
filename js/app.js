@@ -10,12 +10,12 @@ import {
     onSnapshot, 
     serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-import { getStorage } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
 
 // TELEGRAM BOT CONFIGURATION
 const TELEGRAM_BOT_TOKEN = "8842393659:AAEK-X-hY4C_KjEtMfUCjMXWQWq_XcjbwfQ"; 
 const TELEGRAM_CHAT_ID = "7135887501";     
-const AGENT_WHATSAPP_NUMBER = "+94700000000"; // Admin Contact / Call Number
+const AGENT_WHATSAPP_NUMBER = "+94700000000"; 
 
 const firebaseConfig = {
     apiKey: "AIzaSyCdLAlDB0GK6_GhvpgFLnjmwO_VRbvRIms",
@@ -34,7 +34,6 @@ const storage = getStorage(app);
 
 const chatsCollection = collection(db, "live_chats");
 
-// ONLINE AGENTS LIST FOR DEPOSIT SUGGESTIONS
 const onlineAgents = [
     {
         id: "agent_suwahas",
@@ -69,7 +68,6 @@ const onlineAgents = [
     }
 ];
 
-// MULTI-LANGUAGE DICTIONARY
 const translations = {
     en: {
         subHeader: "INDEPENDENT AGENT SERVICE",
@@ -196,7 +194,6 @@ function initTheme() {
     }
 }
 
-// SOUND EFFECTS
 function playSuccessSound() {
     try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -337,6 +334,16 @@ function showCustomModal(title, message, type = "success") {
     }
 }
 
+// IMAGE VIEWER MODAL FUNCTIONALITY
+function openImageViewer(src) {
+    const modal = document.getElementById("imageViewerModal");
+    const img = document.getElementById("fullImageView");
+    if (modal && img) {
+        img.src = src;
+        modal.classList.add("show");
+    }
+}
+
 function showPage(page) {
     document.querySelectorAll(".page").forEach(el => el.classList.remove("active"));
     const target = document.getElementById(page + "Page");
@@ -379,7 +386,6 @@ function renderUserInfo(user) {
     }
 }
 
-// TELEGRAM API INTEGRATION
 function sendTelegramPhoto(file, caption) {
     return new Promise((resolve, reject) => {
         const formData = new FormData();
@@ -431,7 +437,6 @@ function sendTelegramVoice(blob, caption) {
     });
 }
 
-// STRICT DUPLICATE-PREVENTING TELEGRAM POLLING
 let lastTelegramUpdateId = 0;
 let isPollingActive = false;
 const processedTelegramMsgIds = new Set(); 
@@ -486,7 +491,6 @@ function pollTelegramAgentReplies() {
     }, 3500); 
 }
 
-// LISTEN TO FIRESTORE LIVE CHATS (HANDLES TEXT, IMAGE, VOICE RENDERING)
 let chatUnsubscribe = null;
 let lastMessageCount = 0;
 
@@ -537,11 +541,18 @@ function listenForLiveChats(user) {
             const msgDiv = document.createElement("div");
             msgDiv.className = `msg ${data.sender === "user" ? "user" : "agent"}`;
             
-            // Render text, images or voice messages in chat box
+            // RENDERING TEXT, VOICE, AND IMAGE MESSAGES
             if (data.imageUrl) {
-                msgDiv.innerHTML = `<img src="${data.imageUrl}" style="max-width:100%; border-radius:8px;" />`;
+                const imgEl = document.createElement("img");
+                imgEl.src = data.imageUrl;
+                imgEl.className = "chat-img-thumb";
+                imgEl.addEventListener("click", () => openImageViewer(data.imageUrl));
+                msgDiv.appendChild(imgEl);
             } else if (data.voiceUrl) {
-                msgDiv.innerHTML = `<audio controls style="max-width:200px;"><source src="${data.voiceUrl}" type="audio/ogg"></audio>`;
+                const audioEl = document.createElement("audio");
+                audioEl.controls = true;
+                audioEl.src = data.voiceUrl;
+                msgDiv.appendChild(audioEl);
             } else {
                 msgDiv.textContent = data.text;
             }
@@ -574,12 +585,17 @@ document.addEventListener("DOMContentLoaded", () => {
         chatBox.classList.add("open");
     });
 
-    // 1. DIRECT CALL / WHATSAPP ACTION
+    // Close Image Viewer Modal
+    document.getElementById("closeImageViewer")?.addEventListener("click", () => {
+        document.getElementById("imageViewerModal")?.classList.remove("show");
+    });
+
+    // Direct Call / WhatsApp Action
     document.getElementById("btnCallAgent")?.addEventListener("click", () => {
         window.open(`https://wa.me/${AGENT_WHATSAPP_NUMBER}`, "_blank");
     });
 
-    // 2. TEXT MESSAGE SENDING
+    // Text Messaging System
     async function handleSendMessage() {
         const text = chatInput.value.trim();
         if (!text) return;
@@ -638,7 +654,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.key === "Enter") handleSendMessage();
     });
 
-    // 3. CHAT IMAGE UPLOADER
+    // Image Upload & Firebase Storage Integration
     const chatImageInput = document.getElementById("chatImageInput");
     const btnChatUploadImg = document.getElementById("btnChatUploadImg");
 
@@ -656,24 +672,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
         showToast("Uploading Image...");
 
-        const caption = `🖼️ *LIVE CHAT IMAGE*\n\n👤 *User:* ${userName}\n🆔 *User ID:* ${userId}`;
         try {
+            // Upload to Firebase Storage
+            const fileRef = ref(storage, `chat_images/${Date.now()}_${file.name}`);
+            await uploadBytes(fileRef, file);
+            const downloadURL = await getDownloadURL(fileRef);
+
+            // Telegram Notification
+            const caption = `🖼️ *LIVE CHAT IMAGE*\n\n👤 *User:* ${userName}\n🆔 *User ID:* ${userId}`;
             await sendTelegramPhoto(file, caption);
+
+            // Add Document to Firestore
             await addDoc(chatsCollection, {
-                text: "📷 [Image Sent]",
+                imageUrl: downloadURL,
                 sender: "user",
                 userId: userId,
                 createdAt: serverTimestamp()
             });
+
             showToast("Image Sent!");
         } catch (err) {
             console.error("Image Upload Error:", err);
-            showToast("Failed to send image.");
+            showToast("Failed to upload image.");
         }
         chatImageInput.value = "";
     });
 
-    // 4. VOICE RECORDING AND SENDING SYSTEM
+    // Voice Recording & Firebase Storage Integration
     let mediaRecorder;
     let audioChunks = [];
     let isRecording = false;
@@ -698,16 +723,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     showToast("Sending Voice Message...");
 
-                    const caption = `🎙️ *LIVE CHAT VOICE MESSAGE*\n\n👤 *User:* ${userName}\n🆔 *User ID:* ${userId}`;
-                    
                     try {
+                        // Upload Audio to Firebase Storage
+                        const audioRef = ref(storage, `chat_voices/${Date.now()}_voice.ogg`);
+                        await uploadBytes(audioRef, audioBlob);
+                        const audioURL = await getDownloadURL(audioRef);
+
+                        // Telegram Voice Notification
+                        const caption = `🎙️ *LIVE CHAT VOICE MESSAGE*\n\n👤 *User:* ${userName}\n🆔 *User ID:* ${userId}`;
                         await sendTelegramVoice(audioBlob, caption);
+
+                        // Save Voice URL to Firestore
                         await addDoc(chatsCollection, {
-                            text: "🎙️ [Voice Message]",
+                            voiceUrl: audioURL,
                             sender: "user",
                             userId: userId,
                             createdAt: serverTimestamp()
                         });
+
                         showToast("Voice Message Sent!");
                     } catch (err) {
                         console.error("Voice Error:", err);
@@ -718,7 +751,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 mediaRecorder.start();
                 isRecording = true;
                 btnChatRecordVoice.style.color = "#ff4d4d";
-                showToast("Recording Voice... Click again to send.");
+                showToast("Recording Voice... Click button again to stop & send.");
             } catch (err) {
                 console.error("Mic Access Error:", err);
                 showToast("Microphone permission denied.");
@@ -914,7 +947,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// AUTHENTICATION LISTENER
 onAuthStateChanged(auth, (user) => {
     if (user) {
         localStorage.setItem("firebaseLoggedIn", "true");

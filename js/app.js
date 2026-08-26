@@ -399,17 +399,15 @@ function pollTelegramAgentReplies() {
                 for (let update of data.result) {
                     lastTelegramUpdateId = update.update_id;
                     
-                    // Check if message is a reply from Agent
                     if (update.message && update.message.reply_to_message) {
                         const replyText = update.message.text;
-                        const originalMsg = update.message.reply_to_message.text || "";
+                        const originalMsg = update.message.reply_to_message.text || update.message.reply_to_message.caption || "";
 
-                        // Extract Target User ID from original message text
-                        const userIdMatch = originalMsg.match(/User ID:\s*([^\n]+)/);
+                        // Flexibly extract Target User ID
+                        const userIdMatch = originalMsg.match(/User ID:\s*([A-Za-z0-9_-]+)/i);
                         const targetUserId = userIdMatch ? userIdMatch[1].trim() : null;
 
                         if (targetUserId) {
-                            // Save Agent Reply linked to specific User ID
                             await addDoc(chatsCollection, {
                                 text: replyText,
                                 sender: "agent",
@@ -439,11 +437,10 @@ function listenForLiveChats(user) {
         return;
     }
 
-    // Filter messages to only show the current logged-in user's chats
+    // Client-side sorting for live chats to bypass Indexing Errors temporarily
     const q = query(
         chatsCollection, 
-        where("userId", "==", user.uid), 
-        orderBy("createdAt", "asc")
+        where("userId", "==", user.uid)
     );
 
     chatUnsubscribe = onSnapshot(q, (snapshot) => {
@@ -453,8 +450,19 @@ function listenForLiveChats(user) {
             </div>
         `;
 
+        const docs = [];
         snapshot.forEach((doc) => {
-            const data = doc.data();
+            docs.push({ id: doc.id, ...doc.data() });
+        });
+
+        // Client-side ordering by timestamp
+        docs.sort((a, b) => {
+            const timeA = a.createdAt ? a.createdAt.toMillis() : Date.now();
+            const timeB = b.createdAt ? b.createdAt.toMillis() : Date.now();
+            return timeA - timeB;
+        });
+
+        docs.forEach((data) => {
             const msgDiv = document.createElement("div");
             msgDiv.className = `msg ${data.sender === "user" ? "user" : "agent"}`;
             msgDiv.textContent = data.text;
@@ -462,6 +470,8 @@ function listenForLiveChats(user) {
         });
 
         chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+    }, (error) => {
+        console.error("Firestore Chat Error:", error);
     });
 }
 
@@ -500,7 +510,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const userEmail = currentUser.email || "N/A";
         const userId = currentUser.uid;
 
-        // Save User Message to Firestore linked with userId
+        // Save User Message to Firestore
         try {
             await addDoc(chatsCollection, {
                 text: text,
@@ -514,7 +524,7 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Firestore Save Error:", e);
         }
 
-        // Forward to Telegram Agent Bot with Email & User ID
+        // Forward to Telegram Agent Bot
         const caption = `💬 *LIVE CHAT SUPPORT MESSAGE*\n\n` +
                         `👤 *User Name:* ${userName}\n` +
                         `📧 *Email:* ${userEmail}\n` +
@@ -719,7 +729,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// AUTHENTICATION LISTENER (LISTEN & FILTER PER USER)
+// AUTHENTICATION LISTENER
 onAuthStateChanged(auth, (user) => {
     if (user) {
         localStorage.setItem("firebaseLoggedIn", "true");
@@ -728,7 +738,6 @@ onAuthStateChanged(auth, (user) => {
         localStorage.setItem("userId", user.uid);
         renderUserInfo(user);
         
-        // Start listening to live chat for ONLY logged-in user
         listenForLiveChats(user);
     } else {
         const isLogged = localStorage.getItem("firebaseLoggedIn");

@@ -131,7 +131,7 @@ const translations = {
         lblWhatsapp: "வாட்ஸ்அப் எண்", btnSubmitDeposit: "வைப்பு கோரிக்கையை சமர்ப்பிக்கவும்",
         withdrawTitle: "திரும்பப் பெறல் கோரிக்கை", withdrawDesc: "செயலாக்கத்திற்கு உங்கள் விவரங்களை உள்ளிடவும்.", txtImportant: "முக்கியமானது",
         txtWithdrawInfo: "சமர்ப்பிப்பதற்கு முன் அனைத்து விவரங்களையும் மீண்டும் சரிபார்க்கவும்.",
-        lblWithdrawAmount: "திரும்பப் பெறும் தொகை", lblBankDetails: "வங்கி / கட்டண விவரங்கள்", btnSubmitWithdraw: "திரும்பப் பெறல் கோரிக்கையை சமர்ப்பிக்கவும்",
+        lblWithdrawAmount: "திரும்பப் பெறும் தொகை", lblBankDetails: "வங்கி / கட்டண விவரங்கள்", btnSubmitWithdraw: "திரும்பப் பெறல் கோரிக்கை சமர்ப்பிக்கவும்",
         titleSettings: "அமைப்புகள்", lblTheme: "Dark Mode", descTheme: "Light மற்றும் Dark மோடை மாற்றவும்",
         lblLanguage: "மொழி (Language)", descLanguage: "மொழியைத் தேர்ந்தெடுக்கவும்",
         lblNotif: "அறிவிப்புகள்", descNotif: "புதுப்பிப்புகளைப் பெறுங்கள்", lblSupport: "முகவர் ஆதரவு", descSupport: "நேரடி அரட்டையைப் பயன்படுத்தவும்",
@@ -469,6 +469,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         chatInput.value = "";
         const userName = localStorage.getItem("userName") || "Guest User";
+        const userEmail = auth.currentUser ? auth.currentUser.email : (localStorage.getItem("userEmail") || "N/A");
 
         // Save User Message to Firestore
         try {
@@ -476,15 +477,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 text: text,
                 sender: "user",
                 userName: userName,
+                userEmail: userEmail,
                 createdAt: serverTimestamp()
             });
         } catch (e) {
             console.error("Firestore Save Error:", e);
         }
 
-        // Forward to Telegram Agent Bot
+        // Forward to Telegram Agent Bot with User Email included
         const caption = `💬 *LIVE CHAT SUPPORT MESSAGE*\n\n` +
                         `👤 *User Name:* ${userName}\n` +
+                        `📧 *Email:* ${userEmail}\n` +
                         `💬 *Message:* ${text}\n` +
                         `⏰ *Time:* ${new Date().toLocaleTimeString()}\n\n` +
                         `👉 *Reply to this message to send reply to user.*`;

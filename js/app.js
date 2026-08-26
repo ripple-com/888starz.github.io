@@ -76,7 +76,7 @@ const translations = {
         lblWithdrawAmount: "WITHDRAWAL AMOUNT", lblBankDetails: "PAYMENT / BANK DETAILS", btnSubmitWithdraw: "SUBMIT WITHDRAWAL REQUEST",
         titleSettings: "Settings", lblTheme: "Dark Mode", descTheme: "Switch between Light and Dark mode",
         lblLanguage: "Language", descLanguage: "Select system language",
-        lblNotif: "Notifications", descNotif: "Receive transaction updates", lblSupport: "Agent Support", descSupport: "Contact WhatsApp support",
+        lblNotif: "Notifications", descNotif: "Receive transaction updates", lblSupport: "Agent Support", descSupport: "Open Live Chat Support",
         navHome: "Home", navDeposit: "Deposit", navWithdraw: "Withdrawal", navSettings: "Setting",
         phAmount: "Enter deposit amount", phName: "Enter your name", phGameId: "Enter your Game ID", phWhatsapp: "Enter WhatsApp number",
         phWAmount: "Enter withdrawal amount", phDetails: "Enter payment details",
@@ -100,7 +100,7 @@ const translations = {
         lblWithdrawAmount: "ලබාගන්නා මුදල", lblBankDetails: "ගෙවීම් / බැංකු විස්තර", btnSubmitWithdraw: "මුදල් ලබාගැනීමේ ඉල්ලීම යොමු කරන්න",
         titleSettings: "සැකසුම් (Settings)", lblTheme: "Dark Mode", descTheme: "Light සහ Dark තිම මාරු කරන්න",
         lblLanguage: "භාෂාව (Language)", descLanguage: "පද්ධති භාෂාව තෝරන්න",
-        lblNotif: "දැනුම්දීම්", descNotif: "ගනුදෙනු යාවත්කාලීන ලබාගන්න", lblSupport: "නියෝජිත සහාය", descSupport: "WhatsApp මගින් සම්බන්ධ වන්න",
+        lblNotif: "දැනුම්දීම්", descNotif: "ගනුදෙනු යාවත්කාලීන ලබාගන්න", lblSupport: "නියෝජිත සහාය", descSupport: "Live Chat පහසුකම භාවිත කරන්න",
         navHome: "මුල් පිටුව", navDeposit: "තැන්පතු", navWithdraw: "ලබාගැනීම්", navSettings: "සැකසුම්",
         phAmount: "තැන්පතු මුදල ඇතුළත් කරන්න", phName: "ඔබේ නම ඇතුළත් කරන්න", phGameId: "Game ID එක ඇතුළත් කරන්න", phWhatsapp: "WhatsApp අංකය ඇතුළත් කරන්න",
         phWAmount: "ලබාගන්නා මුදල ඇතුළත් කරන්න", phDetails: "බැංකු හෝ ගෙවීම් විස්තර ඇතුළත් කරන්න",
@@ -124,7 +124,7 @@ const translations = {
         lblWithdrawAmount: "திரும்பப் பெறும் தொகை", lblBankDetails: "வங்கி / கட்டண விவரங்கள்", btnSubmitWithdraw: "திரும்பப் பெறல் கோரிக்கையை சமர்ப்பிக்கவும்",
         titleSettings: "அமைப்புகள்", lblTheme: "Dark Mode", descTheme: "Light மற்றும் Dark மோடை மாற்றவும்",
         lblLanguage: "மொழி (Language)", descLanguage: "மொழியைத் தேர்ந்தெடுக்கவும்",
-        lblNotif: "அறிவிப்புகள்", descNotif: "புதுப்பிப்புகளைப் பெறுங்கள்", lblSupport: "முகவர் ஆதரவு", descSupport: "வாட்ஸ்அப் ஆதரவை தொடர்பு கொள்ளவும்",
+        lblNotif: "அறிவிப்புகள்", descNotif: "புதுப்பிப்புகளைப் பெறுங்கள்", lblSupport: "முகவர் ஆதரவு", descSupport: "நேரடி அரட்டையைப் பயன்படுத்தவும்",
         navHome: "முகப்பு", navDeposit: "வைப்பு", navWithdraw: "திரும்பப் பெறல்", navSettings: "அமைப்புகள்",
         phAmount: "வைப்புத் தொகையை உள்ளிடவும்", phName: "உங்கள் பெயரை உள்ளிடவும்", phGameId: "Game ID ஐ உள்ளிடவும்", phWhatsapp: "வாட்ஸ்அப் எண்ணை உள்ளிடவும்",
         phWAmount: "தொகையை உள்ளிடவும்", phDetails: "வங்கி விவரங்களை உள்ளிடவும்",
@@ -219,14 +219,12 @@ function renderSelectedAgent(agent) {
     if (roleEl) roleEl.textContent = agent.role;
     if (avatarEl) avatarEl.textContent = agent.avatar;
 
-    // Trigger Pod-Style Animation
     if (cardEl) {
         cardEl.classList.remove("pod-style");
-        void cardEl.offsetWidth; // Force Reflow
+        void cardEl.offsetWidth; 
         cardEl.classList.add("pod-style");
     }
 
-    // Render Bank Cards with Animation
     if (bankContainer) {
         bankContainer.innerHTML = agent.banks.map(bank => `
             <div class="bank-card-item fade-in">
@@ -244,13 +242,11 @@ function renderSelectedAgent(agent) {
     }
 }
 
-// INITIALIZE AGENT DROPDOWN & SUGGESTIONS
 function setupOnlineAgentSystem() {
     const selectEl = document.getElementById("agentSelect");
     if (!selectEl) return;
 
     selectEl.innerHTML = onlineAgents.map(ag => `<option value="${ag.id}">${ag.name}</option>`).join("");
-
     renderSelectedAgent(onlineAgents[0]);
 
     selectEl.addEventListener("change", (e) => {
@@ -259,7 +255,6 @@ function setupOnlineAgentSystem() {
     });
 }
 
-// COPY TO CLIPBOARD FUNCTION
 window.copyAccNumber = function(accNum) {
     navigator.clipboard.writeText(accNum).then(() => {
         showToast("Bank Account Number Copied!");
@@ -277,11 +272,9 @@ function showToast(text) {
     }
 }
 
-// UNIVERSAL DYNAMIC MODAL POPUP
 let isSuccessAction = false;
 function showCustomModal(title, message, type = "success") {
     isSuccessAction = (type === "success");
-
     if (type === "success") playSuccessSound();
 
     const popup = document.getElementById("successPopup");
@@ -349,7 +342,7 @@ function renderUserInfo(user) {
     }
 }
 
-// TELEGRAM API Integration
+// TELEGRAM API INTEGRATION
 function sendTelegramPhoto(file, caption) {
     return new Promise((resolve, reject) => {
         const formData = new FormData();
@@ -389,6 +382,53 @@ document.addEventListener("DOMContentLoaded", () => {
     initTheme();
     setLanguage(currentLang);
     renderUserInfo(auth.currentUser);
+
+    // LIVE CHAT WIDGET FUNCTIONALITY
+    const toggleChatBtn = document.getElementById("toggleChatBtn");
+    const closeChatBtn = document.getElementById("closeChatBtn");
+    const chatBox = document.getElementById("chatBox");
+    const sendChatBtn = document.getElementById("sendChatBtn");
+    const chatInput = document.getElementById("chatInput");
+    const chatMessages = document.getElementById("chatMessages");
+    const openChatFromSettings = document.getElementById("openChatFromSettings");
+
+    const toggleChat = () => chatBox.classList.toggle("open");
+    toggleChatBtn?.addEventListener("click", toggleChat);
+    closeChatBtn?.addEventListener("click", () => chatBox.classList.remove("open"));
+    openChatFromSettings?.addEventListener("click", () => {
+        chatBox.classList.add("open");
+    });
+
+    async function handleSendMessage() {
+        const text = chatInput.value.trim();
+        if (!text) return;
+
+        // Render User Message locally
+        const userMsg = document.createElement("div");
+        userMsg.className = "msg user";
+        userMsg.textContent = text;
+        chatMessages.appendChild(userMsg);
+        chatInput.value = "";
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        // Forward to Telegram Agent Bot
+        const userName = localStorage.getItem("userName") || "Guest User";
+        const caption = `💬 *LIVE CHAT SUPPORT MESSAGE*\n\n` +
+                        `👤 *User Name:* ${userName}\n` +
+                        `💬 *Message:* ${text}\n` +
+                        `⏰ *Time:* ${new Date().toLocaleTimeString()}`;
+
+        try {
+            await sendTelegramText(caption);
+        } catch (e) {
+            console.warn("Chat Telegram notification failed", e);
+        }
+    }
+
+    sendChatBtn?.addEventListener("click", handleSendMessage);
+    chatInput?.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") handleSendMessage();
+    });
 
     const popupCloseBtn = document.getElementById("popupCloseBtn");
     if (popupCloseBtn) {
@@ -462,11 +502,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 window.location.href = "login.html";
             } catch (err) { console.error(err); }
         });
-    }
-
-    const whatsappBtn = document.getElementById("whatsappSupportBtn");
-    if (whatsappBtn) {
-        whatsappBtn.addEventListener("click", () => window.open("https://wa.me/94702883324", "_blank"));
     }
 
     // DEPOSIT SUBMIT WITH SELECTED AGENT INFO

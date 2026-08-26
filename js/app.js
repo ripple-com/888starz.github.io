@@ -10,7 +10,7 @@ import {
     onSnapshot, 
     serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
+import { getStorage } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
 
 // TELEGRAM BOT CONFIGURATION
 const TELEGRAM_BOT_TOKEN = "8842393659:AAEK-X-hY4C_KjEtMfUCjMXWQWq_XcjbwfQ"; 
@@ -305,16 +305,6 @@ function showToast(text) {
     }
 }
 
-// IMAGE LIGHTBOX PREVIEW FUNCTION
-function openImageLightbox(src) {
-    const lightbox = document.getElementById("imageLightbox");
-    const lightboxImg = document.getElementById("lightboxImg");
-    if (lightbox && lightboxImg) {
-        lightboxImg.src = src;
-        lightbox.classList.add("show");
-    }
-}
-
 let isSuccessAction = false;
 function showCustomModal(title, message, type = "success") {
     isSuccessAction = (type === "success");
@@ -470,33 +460,6 @@ function pollTelegramAgentReplies() {
                         const userIdMatch = originalMsg.match(/User ID:\s*([A-Za-z0-9_-]+)/i);
                         const targetUserId = userIdMatch ? userIdMatch[1].trim() : null;
 
-                        let voiceUrl = null;
-                        let imageUrl = null;
-
-                        // Check Telegram Agent Voice Reply
-                        if (update.message.voice) {
-                            try {
-                                const fileId = update.message.voice.file_id;
-                                const fileRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${fileId}`);
-                                const fileData = await fileRes.json();
-                                if (fileData.ok) {
-                                    voiceUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${fileData.result.file_path}`;
-                                }
-                            } catch (err) { console.warn("Voice file fetch error:", err); }
-                        }
-
-                        // Check Telegram Agent Image Reply
-                        if (update.message.photo && update.message.photo.length > 0) {
-                            try {
-                                const fileId = update.message.photo[update.message.photo.length - 1].file_id;
-                                const fileRes = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getFile?file_id=${fileId}`);
-                                const fileData = await fileRes.json();
-                                if (fileData.ok) {
-                                    imageUrl = `https://api.telegram.org/file/bot${TELEGRAM_BOT_TOKEN}/${fileData.result.file_path}`;
-                                }
-                            } catch (err) { console.warn("Photo file fetch error:", err); }
-                        }
-
                         if (targetUserId) {
                             const checkQuery = query(
                                 chatsCollection, 
@@ -507,8 +470,6 @@ function pollTelegramAgentReplies() {
                             if (existingDocs.empty) {
                                 await addDoc(chatsCollection, {
                                     text: replyText,
-                                    voiceUrl: voiceUrl || null,
-                                    imageUrl: imageUrl || null,
                                     sender: "agent",
                                     userId: targetUserId,
                                     telegramMsgId: telegramMsgId,
@@ -525,15 +486,9 @@ function pollTelegramAgentReplies() {
     }, 3500); 
 }
 
-// LISTEN TO FIRESTORE LIVE CHATS (HANDLES TIME, TEXT, IMAGE & VOICE RENDERING)
+// LISTEN TO FIRESTORE LIVE CHATS (HANDLES TEXT, IMAGE, VOICE RENDERING)
 let chatUnsubscribe = null;
 let lastMessageCount = 0;
-
-function formatChatTime(timestamp) {
-    if (!timestamp) return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
 
 function listenForLiveChats(user) {
     const chatMessagesContainer = document.getElementById("chatMessages");
@@ -542,7 +497,7 @@ function listenForLiveChats(user) {
     if (chatUnsubscribe) chatUnsubscribe();
 
     if (!user) {
-        chatMessagesContainer.innerHTML = `<div class="msg agent"><span>කරුණාකර ප්‍රථමයෙන් Login වන්න.</span></div>`;
+        chatMessagesContainer.innerHTML = `<div class="msg agent">කරුණාකර ප්‍රථමයෙන් Login වන්න.</div>`;
         return;
     }
 
@@ -554,8 +509,7 @@ function listenForLiveChats(user) {
     chatUnsubscribe = onSnapshot(q, (snapshot) => {
         chatMessagesContainer.innerHTML = `
             <div class="msg agent">
-                <span>සාදරයෙන් පිළිගන්නවා! ඔබට අවශ්‍ය ඕනෑම සහායක් මෙතැනින් විමසන්න.</span>
-                <span class="msg-time">Just now</span>
+                සාදරයෙන් පිළිගන්නවා! ඔබට අවශ්‍ය ඕනෑම සහායක් මෙතැනින් විමසන්න.
             </div>
         `;
 
@@ -583,25 +537,13 @@ function listenForLiveChats(user) {
             const msgDiv = document.createElement("div");
             msgDiv.className = `msg ${data.sender === "user" ? "user" : "agent"}`;
             
-            let contentHTML = "";
-            const formattedTime = formatChatTime(data.createdAt);
-
-            // Render text, image or voice message along with time
+            // Render text, images or voice messages in chat box
             if (data.imageUrl) {
-                contentHTML = `<img src="${data.imageUrl}" class="chat-img-thumb" alt="Chat Attachment" />`;
+                msgDiv.innerHTML = `<img src="${data.imageUrl}" style="max-width:100%; border-radius:8px;" />`;
             } else if (data.voiceUrl) {
-                contentHTML = `<audio controls class="chat-audio-player"><source src="${data.voiceUrl}" type="audio/ogg"><source src="${data.voiceUrl}" type="audio/mpeg">Your browser does not support playing voice.</audio>`;
+                msgDiv.innerHTML = `<audio controls style="max-width:200px;"><source src="${data.voiceUrl}" type="audio/ogg"></audio>`;
             } else {
-                contentHTML = `<span>${data.text}</span>`;
-            }
-
-            contentHTML += `<span class="msg-time">${formattedTime}</span>`;
-            msgDiv.innerHTML = contentHTML;
-
-            // Bind Lightbox click to image
-            const imgEl = msgDiv.querySelector(".chat-img-thumb");
-            if (imgEl) {
-                imgEl.addEventListener("click", () => openImageLightbox(data.imageUrl));
+                msgDiv.textContent = data.text;
             }
 
             chatMessagesContainer.appendChild(msgDiv);
@@ -630,14 +572,6 @@ document.addEventListener("DOMContentLoaded", () => {
     closeChatBtn?.addEventListener("click", () => chatBox.classList.remove("open"));
     openChatFromSettings?.addEventListener("click", () => {
         chatBox.classList.add("open");
-    });
-
-    // LIGHTBOX CLOSE SYSTEM
-    const closeLightboxBtn = document.getElementById("closeLightboxBtn");
-    const imageLightbox = document.getElementById("imageLightbox");
-    closeLightboxBtn?.addEventListener("click", () => imageLightbox?.classList.remove("show"));
-    imageLightbox?.addEventListener("click", (e) => {
-        if (e.target === imageLightbox) imageLightbox.classList.remove("show");
     });
 
     // 1. DIRECT CALL / WHATSAPP ACTION
@@ -704,7 +638,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.key === "Enter") handleSendMessage();
     });
 
-    // 3. CHAT IMAGE UPLOADER WITH FIREBASE STORAGE & LIGHTBOX SUPPORT
+    // 3. CHAT IMAGE UPLOADER
     const chatImageInput = document.getElementById("chatImageInput");
     const btnChatUploadImg = document.getElementById("btnChatUploadImg");
 
@@ -722,22 +656,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         showToast("Uploading Image...");
 
+        const caption = `🖼️ *LIVE CHAT IMAGE*\n\n👤 *User:* ${userName}\n🆔 *User ID:* ${userId}`;
         try {
-            // Upload photo to Firebase Storage
-            const fileRef = ref(storage, `chat_images/${Date.now()}_${file.name}`);
-            const uploadSnapshot = await uploadBytes(fileRef, file);
-            const downloadUrl = await getDownloadURL(uploadSnapshot.ref);
-
+            await sendTelegramPhoto(file, caption);
             await addDoc(chatsCollection, {
-                text: "📷 [Image]",
-                imageUrl: downloadUrl,
+                text: "📷 [Image Sent]",
                 sender: "user",
                 userId: userId,
                 createdAt: serverTimestamp()
             });
-
-            const caption = `🖼️ *LIVE CHAT IMAGE*\n\n👤 *User:* ${userName}\n🆔 *User ID:* ${userId}`;
-            await sendTelegramPhoto(file, caption);
             showToast("Image Sent!");
         } catch (err) {
             console.error("Image Upload Error:", err);
@@ -746,7 +673,7 @@ document.addEventListener("DOMContentLoaded", () => {
         chatImageInput.value = "";
     });
 
-    // 4. VOICE RECORDING AND SENDING SYSTEM WITH AUDIO PLAYBACK
+    // 4. VOICE RECORDING AND SENDING SYSTEM
     let mediaRecorder;
     let audioChunks = [];
     let isRecording = false;
@@ -771,22 +698,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     showToast("Sending Voice Message...");
 
+                    const caption = `🎙️ *LIVE CHAT VOICE MESSAGE*\n\n👤 *User:* ${userName}\n🆔 *User ID:* ${userId}`;
+                    
                     try {
-                        // Upload voice recording to Firebase Storage
-                        const voiceRef = ref(storage, `chat_voices/${Date.now()}.ogg`);
-                        const uploadSnapshot = await uploadBytes(voiceRef, audioBlob);
-                        const voiceDownloadUrl = await getDownloadURL(uploadSnapshot.ref);
-
+                        await sendTelegramVoice(audioBlob, caption);
                         await addDoc(chatsCollection, {
                             text: "🎙️ [Voice Message]",
-                            voiceUrl: voiceDownloadUrl,
                             sender: "user",
                             userId: userId,
                             createdAt: serverTimestamp()
                         });
-
-                        const caption = `🎙️ *LIVE CHAT VOICE MESSAGE*\n\n👤 *User:* ${userName}\n🆔 *User ID:* ${userId}`;
-                        await sendTelegramVoice(audioBlob, caption);
                         showToast("Voice Message Sent!");
                     } catch (err) {
                         console.error("Voice Error:", err);

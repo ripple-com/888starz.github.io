@@ -265,8 +265,135 @@ button { cursor:pointer; }
 .toggle.on::after { transform:translateX(20px); background:#fff; }
 
 .notice { margin-top:18px; text-align:center; color:var(--muted); font-size:9px; line-height:1.6; }
-.whatsapp { position:fixed; right:18px; bottom:98px; z-index:998; width:50px; height:50px; display:grid; place-items:center; border-radius:50%; background:#20d66b; color:#06150b; }
-.whatsapp svg { width:23px; height:23px; stroke:currentColor; fill:none; stroke-width:1.8; }
+
+/* FLOATING LIVE CHAT WIDGET STYLES */
+.chat-widget-container {
+    position: fixed;
+    right: 18px;
+    bottom: 95px;
+    z-index: 99999;
+}
+
+.chat-toggle-btn {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--orange), var(--orange2));
+    color: #070707;
+    border: none;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 10px 25px rgba(255, 105, 0, 0.4);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+.chat-toggle-btn:hover { transform: scale(1.08); }
+
+.chat-box {
+    position: absolute;
+    bottom: 65px;
+    right: 0;
+    width: min(340px, 90vw);
+    height: 420px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(20px) scale(0.95);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.chat-box.open {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+
+.chat-header {
+    background: var(--card2);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--line);
+}
+.chat-header-info { display: flex; align-items: center; gap: 10px; }
+.chat-header-info strong { display: block; font-size: 13px; color: var(--text); }
+.chat-header-info small { font-size: 10px; color: var(--green); }
+
+.chat-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.chat-messages {
+    flex: 1;
+    padding: 14px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.msg {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 12px;
+    line-height: 1.4;
+}
+.msg.user {
+    align-self: flex-end;
+    background: var(--orange);
+    color: #000;
+    font-weight: 600;
+    border-bottom-right-radius: 2px;
+}
+.msg.agent {
+    align-self: flex-start;
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-bottom-left-radius: 2px;
+}
+
+.chat-input-area {
+    padding: 10px;
+    background: var(--card2);
+    display: flex;
+    gap: 8px;
+    border-top: 1px solid var(--line);
+}
+.chat-input-area input {
+    flex: 1;
+    height: 40px;
+    background: var(--input-bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 0 12px;
+    color: var(--text);
+    font-size: 12px;
+    outline: none;
+}
+.chat-input-area button {
+    width: 40px;
+    height: 40px;
+    background: var(--orange);
+    border: none;
+    border-radius: 10px;
+    color: #000;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+}
 
 /* BOTTOM NAVIGATION */
 .bottom-nav { position:fixed; left:50%; bottom:11px; transform:translateX(-50%); width:min(500px,94%); height:70px; padding:6px; display:flex; align-items:center; justify-content:space-around; background:var(--nav-bg); backdrop-filter:blur(24px); border:1px solid var(--line); border-radius:23px; z-index:9999; }
@@ -580,9 +707,9 @@ button { cursor:pointer; }
                     <button class="toggle on" id="toggleNotifBtn"></button>
                 </div>
                 
-                <div class="setting-item" id="whatsappSupportBtn" style="cursor:pointer">
-                    <div class="setting-icon"><svg viewBox="0 0 24 24"><path d="M20 11.5 a8 8 0 0 1-11.5 7.2 L4 20l1.3-4.2 A8 8 0 1 1 20 11.5Z"/></svg></div>
-                    <div class="setting-info"><h3 data-i18n="lblSupport">Agent Support</h3><p data-i18n="descSupport">Contact WhatsApp support</p></div>
+                <div class="setting-item" id="openChatFromSettings" style="cursor:pointer">
+                    <div class="setting-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
+                    <div class="setting-info"><h3 data-i18n="lblSupport">Agent Support</h3><p data-i18n="descSupport">Open Live Chat Support</p></div>
                     <div>→</div>
                 </div>
 
@@ -600,7 +727,36 @@ button { cursor:pointer; }
     </section>
 </main>
 
-<a href="https://wa.me/94702883324" class="whatsapp" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M20 11.5 a8 8 0 0 1-11.5 7.2 L4 20l1.3-4.2 A8 8 0 1 1 20 11.5Z"/></svg></a>
+<!-- FLOATING IN-APP LIVE CHAT WIDGET -->
+<div class="chat-widget-container">
+    <div class="chat-box" id="chatBox">
+        <div class="chat-header">
+            <div class="chat-header-info">
+                <div class="online-dot"></div>
+                <div>
+                    <strong>Live Agent Support</strong>
+                    <small>Online | Instant Reply</small>
+                </div>
+            </div>
+            <button class="chat-close-btn" id="closeChatBtn">&times;</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="msg agent">
+                සාදරයෙන් පිළිගන්නවා! ඔබට අවශ්‍ය ඕනෑම සහායක් මෙතැනින් විමසන්න.
+            </div>
+        </div>
+        <div class="chat-input-area">
+            <input type="text" id="chatInput" placeholder="Type your message...">
+            <button id="sendChatBtn">
+                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" fill="none" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+        </div>
+    </div>
+
+    <button class="chat-toggle-btn" id="toggleChatBtn" title="Live Agent Support">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" fill="none" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    </button>
+</div>
 
 <nav class="bottom-nav">
     <button class="nav-btn active" data-page="home">

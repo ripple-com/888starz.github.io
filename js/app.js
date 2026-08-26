@@ -5,8 +5,7 @@ import {
     collection, 
     addDoc, 
     query, 
-    where,
-    orderBy, 
+    where, 
     onSnapshot, 
     serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
@@ -403,7 +402,7 @@ function pollTelegramAgentReplies() {
                         const replyText = update.message.text;
                         const originalMsg = update.message.reply_to_message.text || update.message.reply_to_message.caption || "";
 
-                        // Flexibly extract Target User ID
+                        // Extract User ID dynamically
                         const userIdMatch = originalMsg.match(/User ID:\s*([A-Za-z0-9_-]+)/i);
                         const targetUserId = userIdMatch ? userIdMatch[1].trim() : null;
 
@@ -437,7 +436,6 @@ function listenForLiveChats(user) {
         return;
     }
 
-    // Client-side sorting for live chats to bypass Indexing Errors temporarily
     const q = query(
         chatsCollection, 
         where("userId", "==", user.uid)
@@ -457,8 +455,8 @@ function listenForLiveChats(user) {
 
         // Client-side ordering by timestamp
         docs.sort((a, b) => {
-            const timeA = a.createdAt ? a.createdAt.toMillis() : Date.now();
-            const timeB = b.createdAt ? b.createdAt.toMillis() : Date.now();
+            const timeA = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : a.createdAt) : 0;
+            const timeB = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : b.createdAt) : 0;
             return timeA - timeB;
         });
 
@@ -505,12 +503,24 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
+        // 1. Clear input field immediately
         chatInput.value = "";
+
+        // 2. Add message to UI IMMEDIATELY (Instant Display Fix)
+        const chatMessagesContainer = document.getElementById("chatMessages");
+        if (chatMessagesContainer) {
+            const userMsgDiv = document.createElement("div");
+            userMsgDiv.className = "msg user";
+            userMsgDiv.textContent = text;
+            chatMessagesContainer.appendChild(userMsgDiv);
+            chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+        }
+
         const userName = localStorage.getItem("userName") || currentUser.displayName || "Guest User";
         const userEmail = currentUser.email || "N/A";
         const userId = currentUser.uid;
 
-        // Save User Message to Firestore
+        // 3. Save User Message to Firestore
         try {
             await addDoc(chatsCollection, {
                 text: text,
@@ -524,7 +534,7 @@ document.addEventListener("DOMContentLoaded", () => {
             console.error("Firestore Save Error:", e);
         }
 
-        // Forward to Telegram Agent Bot
+        // 4. Forward to Telegram Agent Bot
         const caption = `💬 *LIVE CHAT SUPPORT MESSAGE*\n\n` +
                         `👤 *User Name:* ${userName}\n` +
                         `📧 *Email:* ${userEmail}\n` +

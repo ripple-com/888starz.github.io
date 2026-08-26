@@ -6,6 +6,7 @@ import {
     addDoc, 
     query, 
     where, 
+    getDocs,
     onSnapshot, 
     serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
@@ -194,6 +195,7 @@ function initTheme() {
     }
 }
 
+// SUCCESS AND NOTIFICATION SOUNDS
 function playSuccessSound() {
     try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -213,6 +215,29 @@ function playSuccessSound() {
         osc.stop(ctx.currentTime + 0.35);
     } catch (e) {
         console.warn("Audio suppressed:", e);
+    }
+}
+
+// USER NOTIFICATION SOUND FOR AGENT REPLY
+function playNotificationSound() {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        if (ctx.state === 'suspended') ctx.resume();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.12); // E5
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+    } catch (e) {
+        console.warn("Notification audio error:", e);
     }
 }
 
@@ -288,20 +313,24 @@ function showCustomModal(title, message, type = "success") {
     const popup = document.getElementById("successPopup");
     const popupTitle = document.getElementById("popupTitle");
     const popupMsg = document.getElementById("popupMessage");
-    const popupIcon = popup.querySelector(".popup-icon");
+    const popupIcon = popup ? popup.querySelector(".popup-icon") : null;
 
     if (popup && popupMsg && popupTitle) {
         popupTitle.textContent = title;
         popupMsg.textContent = message;
 
         if (type === "error") {
-            popupIcon.style.background = "rgba(255, 77, 77, 0.15)";
-            popupIcon.style.color = "#ff4d4d";
-            popupIcon.innerHTML = `<svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+            if (popupIcon) {
+                popupIcon.style.background = "rgba(255, 77, 77, 0.15)";
+                popupIcon.style.color = "#ff4d4d";
+                popupIcon.innerHTML = `<svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
+            }
         } else {
-            popupIcon.style.background = "rgba(32, 214, 107, 0.15)";
-            popupIcon.style.color = "var(--green)";
-            popupIcon.innerHTML = `<svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            if (popupIcon) {
+                popupIcon.style.background = "rgba(32, 214, 107, 0.15)";
+                popupIcon.style.color = "var(--green)";
+                popupIcon.innerHTML = `<svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            }
         }
 
         popup.classList.add("show");
@@ -386,7 +415,7 @@ function sendTelegramText(textMessage) {
     });
 }
 
-// TELEGRAM REPLIES POLLING (REALTIME AGENT REPLIES CATCHER)
+// TELEGRAM REPLIES POLLING WITH DEDUPLICATION PREVENTING MULTIPLE MESSAGES
 let lastTelegramUpdateId = 0;
 function pollTelegramAgentReplies() {
     setInterval(async () => {
@@ -400,6 +429,7 @@ function pollTelegramAgentReplies() {
                     
                     if (update.message && update.message.reply_to_message) {
                         const replyText = update.message.text;
+                        const telegramMsgId = update.message.message_id;
                         const originalMsg = update.message.reply_to_message.text || update.message.reply_to_message.caption || "";
 
                         // Extract User ID dynamically
@@ -407,12 +437,22 @@ function pollTelegramAgentReplies() {
                         const targetUserId = userIdMatch ? userIdMatch[1].trim() : null;
 
                         if (targetUserId) {
-                            await addDoc(chatsCollection, {
-                                text: replyText,
-                                sender: "agent",
-                                userId: targetUserId,
-                                createdAt: serverTimestamp()
-                            });
+                            // Check if this Telegram reply was already saved to prevent duplicates
+                            const checkQuery = query(
+                                chatsCollection, 
+                                where("telegramMsgId", "==", telegramMsgId)
+                            );
+                            const existingDocs = await getDocs(checkQuery);
+
+                            if (existingDocs.empty) {
+                                await addDoc(chatsCollection, {
+                                    text: replyText,
+                                    sender: "agent",
+                                    userId: targetUserId,
+                                    telegramMsgId: telegramMsgId,
+                                    createdAt: serverTimestamp()
+                                });
+                            }
                         }
                     }
                 }
@@ -423,8 +463,10 @@ function pollTelegramAgentReplies() {
     }, 3000); 
 }
 
-// LISTEN TO FIRESTORE LIVE CHAT MESSAGES FILTERED BY LOGGED IN USER
+// LISTEN TO FIRESTORE LIVE CHAT MESSAGES & PLAY SOUND FOR AGENT REPLIES
 let chatUnsubscribe = null;
+let lastMessageCount = 0;
+
 function listenForLiveChats(user) {
     const chatMessagesContainer = document.getElementById("chatMessages");
     if (!chatMessagesContainer) return;
@@ -459,6 +501,16 @@ function listenForLiveChats(user) {
             const timeB = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : b.createdAt) : 0;
             return timeA - timeB;
         });
+
+        // Trigger notification sound if a new message arrives from agent
+        if (docs.length > lastMessageCount && lastMessageCount > 0) {
+            const latestMsg = docs[docs.length - 1];
+            if (latestMsg && latestMsg.sender === "agent") {
+                playNotificationSound();
+                showToast("New message from agent!");
+            }
+        }
+        lastMessageCount = docs.length;
 
         docs.forEach((data) => {
             const msgDiv = document.createElement("div");
@@ -506,7 +558,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // 1. Clear input field immediately
         chatInput.value = "";
 
-        // 2. Add message to UI IMMEDIATELY (Instant Display Fix)
+        // 2. Add message to UI IMMEDIATELY
         const chatMessagesContainer = document.getElementById("chatMessages");
         if (chatMessagesContainer) {
             const userMsgDiv = document.createElement("div");
@@ -520,6 +572,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const userEmail = currentUser.email || "N/A";
         const userId = currentUser.uid;
 
+        // Check if it's the user's first message for Auto Reply
+        const userQuery = query(chatsCollection, where("userId", "==", userId));
+        const userDocs = await getDocs(userQuery);
+        const isFirstMessage = userDocs.empty;
+
         // 3. Save User Message to Firestore
         try {
             await addDoc(chatsCollection, {
@@ -530,11 +587,23 @@ document.addEventListener("DOMContentLoaded", () => {
                 userId: userId,
                 createdAt: serverTimestamp()
             });
+
+            // 4. Send Instant Auto Reply on First Message
+            if (isFirstMessage) {
+                setTimeout(async () => {
+                    await addDoc(chatsCollection, {
+                        text: "සේවා නියෝජිතයකු සමග සම්බන්ධ වෙන තුරු මොහොතක් රැදී සිටින්න.",
+                        sender: "agent",
+                        userId: userId,
+                        createdAt: serverTimestamp()
+                    });
+                }, 800);
+            }
         } catch (e) {
             console.error("Firestore Save Error:", e);
         }
 
-        // 4. Forward to Telegram Agent Bot
+        // 5. Forward to Telegram Agent Bot
         const caption = `💬 *LIVE CHAT SUPPORT MESSAGE*\n\n` +
                         `👤 *User Name:* ${userName}\n` +
                         `📧 *Email:* ${userEmail}\n` +

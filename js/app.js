@@ -486,7 +486,7 @@ function pollTelegramAgentReplies() {
     }, 3500); 
 }
 
-// LISTEN TO FIRESTORE LIVE CHATS
+// LISTEN TO FIRESTORE LIVE CHATS (HANDLES TEXT, IMAGE, VOICE RENDERING)
 let chatUnsubscribe = null;
 let lastMessageCount = 0;
 
@@ -536,7 +536,16 @@ function listenForLiveChats(user) {
         docs.forEach((data) => {
             const msgDiv = document.createElement("div");
             msgDiv.className = `msg ${data.sender === "user" ? "user" : "agent"}`;
-            msgDiv.textContent = data.text;
+            
+            // Render text, images or voice messages in chat box
+            if (data.imageUrl) {
+                msgDiv.innerHTML = `<img src="${data.imageUrl}" style="max-width:100%; border-radius:8px;" />`;
+            } else if (data.voiceUrl) {
+                msgDiv.innerHTML = `<audio controls style="max-width:200px;"><source src="${data.voiceUrl}" type="audio/ogg"></audio>`;
+            } else {
+                msgDiv.textContent = data.text;
+            }
+
             chatMessagesContainer.appendChild(msgDiv);
         });
 
@@ -565,7 +574,7 @@ document.addEventListener("DOMContentLoaded", () => {
         chatBox.classList.add("open");
     });
 
-    // 1. DIRECT CALL / WHATSAPP CALL ACTION
+    // 1. DIRECT CALL / WHATSAPP ACTION
     document.getElementById("btnCallAgent")?.addEventListener("click", () => {
         window.open(`https://wa.me/${AGENT_WHATSAPP_NUMBER}`, "_blank");
     });

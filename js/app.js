@@ -15,6 +15,7 @@ import { getStorage } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-s
 // TELEGRAM BOT CONFIGURATION
 const TELEGRAM_BOT_TOKEN = "8842393659:AAEK-X-hY4C_KjEtMfUCjMXWQWq_XcjbwfQ"; 
 const TELEGRAM_CHAT_ID = "7135887501";     
+const AGENT_WHATSAPP_NUMBER = "+94700000000"; // Admin Contact / Call Number
 
 const firebaseConfig = {
     apiKey: "AIzaSyCdLAlDB0GK6_GhvpgFLnjmwO_VRbvRIms",
@@ -414,6 +415,22 @@ function sendTelegramText(textMessage) {
     });
 }
 
+function sendTelegramVoice(blob, caption) {
+    return new Promise((resolve, reject) => {
+        const formData = new FormData();
+        formData.append("chat_id", TELEGRAM_CHAT_ID);
+        formData.append("voice", blob, "voice_note.ogg");
+        formData.append("caption", caption);
+        formData.append("parse_mode", "Markdown");
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendVoice`, true);
+        xhr.onload = () => (xhr.status >= 200 && xhr.status < 300) ? resolve(JSON.parse(xhr.responseText)) : reject(new Error(xhr.responseText));
+        xhr.onerror = () => reject(new Error("Network Error"));
+        xhr.send(formData);
+    });
+}
+
 // STRICT DUPLICATE-PREVENTING TELEGRAM POLLING
 let lastTelegramUpdateId = 0;
 let isPollingActive = false;
@@ -433,10 +450,9 @@ function pollTelegramAgentReplies() {
                     lastTelegramUpdateId = update.update_id;
                     
                     if (update.message && update.message.reply_to_message) {
-                        const replyText = update.message.text;
+                        const replyText = update.message.text || "[Voice/Media Reply]";
                         const telegramMsgId = update.message.message_id;
 
-                        // Memory Check to Block Instant Duplicates
                         if (processedTelegramMsgIds.has(telegramMsgId)) continue;
                         processedTelegramMsgIds.add(telegramMsgId);
 
@@ -445,7 +461,6 @@ function pollTelegramAgentReplies() {
                         const targetUserId = userIdMatch ? userIdMatch[1].trim() : null;
 
                         if (targetUserId) {
-                            // Firestore Database Duplicate Check
                             const checkQuery = query(
                                 chatsCollection, 
                                 where("telegramMsgId", "==", telegramMsgId)
@@ -471,7 +486,7 @@ function pollTelegramAgentReplies() {
     }, 3500); 
 }
 
-// LISTEN TO FIRESTORE LIVE CHATS AND NOTIFY ON AGENT MESSAGES
+// LISTEN TO FIRESTORE LIVE CHATS
 let chatUnsubscribe = null;
 let lastMessageCount = 0;
 
@@ -509,7 +524,6 @@ function listenForLiveChats(user) {
             return timeA - timeB;
         });
 
-        // Trigger Notification Sound if new Agent message arrives
         if (docs.length > lastMessageCount && lastMessageCount > 0) {
             const latestMsg = docs[docs.length - 1];
             if (latestMsg && latestMsg.sender === "agent") {
@@ -551,18 +565,20 @@ document.addEventListener("DOMContentLoaded", () => {
         chatBox.classList.add("open");
     });
 
+    // 1. DIRECT CALL / WHATSAPP CALL ACTION
+    document.getElementById("btnCallAgent")?.addEventListener("click", () => {
+        window.open(`https://wa.me/${AGENT_WHATSAPP_NUMBER}`, "_blank");
+    });
+
+    // 2. TEXT MESSAGE SENDING
     async function handleSendMessage() {
         const text = chatInput.value.trim();
         if (!text) return;
 
         const currentUser = auth.currentUser;
-        if (!currentUser) {
-            showToast("Please Log In First!");
-            return;
-        }
+        if (!currentUser) return showToast("Please Log In First!");
 
         chatInput.value = "";
-
         const userName = localStorage.getItem("userName") || currentUser.displayName || "Guest User";
         const userEmail = currentUser.email || "N/A";
         const userId = currentUser.uid;
@@ -577,7 +593,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 createdAt: serverTimestamp()
             });
 
-            // Single Auto-Reply Logic
             const userQuery = query(chatsCollection, where("userId", "==", userId));
             const userDocs = await getDocs(userQuery);
             
@@ -612,6 +627,101 @@ document.addEventListener("DOMContentLoaded", () => {
     sendChatBtn?.addEventListener("click", handleSendMessage);
     chatInput?.addEventListener("keypress", (e) => {
         if (e.key === "Enter") handleSendMessage();
+    });
+
+    // 3. CHAT IMAGE UPLOADER
+    const chatImageInput = document.getElementById("chatImageInput");
+    const btnChatUploadImg = document.getElementById("btnChatUploadImg");
+
+    btnChatUploadImg?.addEventListener("click", () => chatImageInput?.click());
+
+    chatImageInput?.addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const currentUser = auth.currentUser;
+        if (!currentUser) return showToast("Please Log In First!");
+
+        const userName = localStorage.getItem("userName") || currentUser.displayName || "User";
+        const userId = currentUser.uid;
+
+        showToast("Uploading Image...");
+
+        const caption = `🖼️ *LIVE CHAT IMAGE*\n\n👤 *User:* ${userName}\n🆔 *User ID:* ${userId}`;
+        try {
+            await sendTelegramPhoto(file, caption);
+            await addDoc(chatsCollection, {
+                text: "📷 [Image Sent]",
+                sender: "user",
+                userId: userId,
+                createdAt: serverTimestamp()
+            });
+            showToast("Image Sent!");
+        } catch (err) {
+            console.error("Image Upload Error:", err);
+            showToast("Failed to send image.");
+        }
+        chatImageInput.value = "";
+    });
+
+    // 4. VOICE RECORDING AND SENDING SYSTEM
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+    const btnChatRecordVoice = document.getElementById("btnChatRecordVoice");
+
+    btnChatRecordVoice?.addEventListener("click", async () => {
+        const currentUser = auth.currentUser;
+        if (!currentUser) return showToast("Please Log In First!");
+
+        if (!isRecording) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: "audio/ogg; codecs=opus" });
+                    const userName = localStorage.getItem("userName") || currentUser.displayName || "User";
+                    const userId = currentUser.uid;
+
+                    showToast("Sending Voice Message...");
+
+                    const caption = `🎙️ *LIVE CHAT VOICE MESSAGE*\n\n👤 *User:* ${userName}\n🆔 *User ID:* ${userId}`;
+                    
+                    try {
+                        await sendTelegramVoice(audioBlob, caption);
+                        await addDoc(chatsCollection, {
+                            text: "🎙️ [Voice Message]",
+                            sender: "user",
+                            userId: userId,
+                            createdAt: serverTimestamp()
+                        });
+                        showToast("Voice Message Sent!");
+                    } catch (err) {
+                        console.error("Voice Error:", err);
+                        showToast("Failed to send voice message.");
+                    }
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                btnChatRecordVoice.style.color = "#ff4d4d";
+                showToast("Recording Voice... Click again to send.");
+            } catch (err) {
+                console.error("Mic Access Error:", err);
+                showToast("Microphone permission denied.");
+            }
+        } else {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                isRecording = false;
+                btnChatRecordVoice.style.color = "";
+            }
+        }
     });
 
     pollTelegramAgentReplies();

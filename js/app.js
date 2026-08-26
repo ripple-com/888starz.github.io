@@ -1,21 +1,11 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-import { 
-    getFirestore, 
-    collection, 
-    addDoc, 
-    query, 
-    where, 
-    getDocs,
-    onSnapshot, 
-    serverTimestamp 
-} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
 
 // TELEGRAM BOT CONFIGURATION
 const TELEGRAM_BOT_TOKEN = "8842393659:AAEK-X-hY4C_KjEtMfUCjMXWQWq_XcjbwfQ"; 
 const TELEGRAM_CHAT_ID = "7135887501";     
-const AGENT_WHATSAPP_NUMBER = "+94700000000"; // Admin Contact / Call Number
 
 const firebaseConfig = {
     apiKey: "AIzaSyCdLAlDB0GK6_GhvpgFLnjmwO_VRbvRIms",
@@ -32,43 +22,6 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-const chatsCollection = collection(db, "live_chats");
-
-// ONLINE AGENTS LIST FOR DEPOSIT SUGGESTIONS
-const onlineAgents = [
-    {
-        id: "agent_suwahas",
-        name: "Agent Suwahas (VIP Agent)",
-        avatar: "S1",
-        role: "Assigned Agent for Deposit (Fast & 24/7)",
-        banks: [
-            { bankName: "Commercial Bank", accNum: "8009847120", accName: "S. Sathsara" },
-            { bankName: "Bank of Ceylon (BOC)", accNum: "89124410", accName: "S. Sathsara" },
-            { bankName: "Sampath Bank", accNum: "1202541198", accName: "S. Sathsara" }
-        ]
-    },
-    {
-        id: "agent_nimal",
-        name: "Agent Nimal (Online Fast)",
-        avatar: "A2",
-        role: "Verified Agent (Instant Transfer)",
-        banks: [
-            { bankName: "Commercial Bank", accNum: "8120098112", accName: "K. Nimal" },
-            { bankName: "HNB Bank", accNum: "0030104881", accName: "K. Nimal" }
-        ]
-    },
-    {
-        id: "agent_kamal",
-        name: "Agent Kamal (Express)",
-        avatar: "A3",
-        role: "Authorized Deposit Partner",
-        banks: [
-            { bankName: "Commercial Bank", accNum: "8772349001", accName: "W. Kamal" },
-            { bankName: "BOC Bank", accNum: "7611094321", accName: "W. Kamal" }
-        ]
-    }
-];
-
 // MULTI-LANGUAGE DICTIONARY
 const translations = {
     en: {
@@ -80,20 +33,20 @@ const translations = {
         slide3Small: "24 / 7 SUPPORT", slide3Title: "Agent<br>Support", slide3Desc: "Get assistance whenever you need it.",
         btnDeposit: "Deposit", btnDepositSub: "Submit payment receipt", btnWithdraw: "Withdrawal", btnWithdrawSub: "Request withdrawal",
         btnLogout: "Logout", descLogout: "Sign out from your account", homeNotice: "This is an independent agent service and is not the official 888Starz website.",
-        depositTitle: "Deposit Request", depositDesc: "Transfer funds to the agent bank account below and upload the payment receipt.",
-        lblSelectAgent: "SELECT AGENT", lblReceipt: "PAYMENT RECEIPT", txtUpload: "Upload Receipt", lblAmount: "DEPOSIT AMOUNT", lblName: "NAME", lblGameId: "GAME ID",
+        depositTitle: "Deposit Request", depositDesc: "Upload payment receipt and complete the details below.",
+        lblReceipt: "PAYMENT RECEIPT", txtUpload: "Upload Receipt", lblAmount: "DEPOSIT AMOUNT", lblName: "NAME", lblGameId: "GAME ID",
         lblWhatsapp: "WHATSAPP NUMBER", btnSubmitDeposit: "SUBMIT DEPOSIT REQUEST",
         withdrawTitle: "Withdrawal Request", withdrawDesc: "Enter your details for withdrawal processing.", txtImportant: "Important",
         txtWithdrawInfo: "Please double-check all details before submitting your withdrawal request.",
         lblWithdrawAmount: "WITHDRAWAL AMOUNT", lblBankDetails: "PAYMENT / BANK DETAILS", btnSubmitWithdraw: "SUBMIT WITHDRAWAL REQUEST",
         titleSettings: "Settings", lblTheme: "Dark Mode", descTheme: "Switch between Light and Dark mode",
         lblLanguage: "Language", descLanguage: "Select system language",
-        lblNotif: "Notifications", descNotif: "Receive transaction updates", lblSupport: "Agent Support", descSupport: "Open Live Chat Support",
+        lblNotif: "Notifications", descNotif: "Receive transaction updates", lblSupport: "Agent Support", descSupport: "Contact WhatsApp support",
         navHome: "Home", navDeposit: "Deposit", navWithdraw: "Withdrawal", navSettings: "Setting",
         phAmount: "Enter deposit amount", phName: "Enter your name", phGameId: "Enter your Game ID", phWhatsapp: "Enter WhatsApp number",
         phWAmount: "Enter withdrawal amount", phDetails: "Enter payment details",
-        msgFillAll: "Please fill all fields and upload receipt.", msgDepSuccess: "Deposit request submitted successfully! Average time: 15 mins.",
-        msgFillAllW: "Please fill all required fields.", msgWSuccess: "Withdrawal request submitted successfully!"
+        msgFillAll: "Please fill all fields and upload receipt.", msgDepSuccess: "Deposit request submitted successfully!",
+        msgFillAllW: "Please fill all fields.", msgWSuccess: "Withdrawal request submitted successfully!"
     },
     si: {
         subHeader: "ස්වාධීන නියෝජිත සේවාව",
@@ -104,19 +57,19 @@ const translations = {
         slide3Small: "24/7 සහාය", slide3Title: "නියෝජිත සහාය", slide3Desc: "ඔබට අවශ්‍ය ඕනෑම වේලාවක සහාය ලබා ගන්න.",
         btnDeposit: "තැන්පතු (Deposit)", btnDepositSub: "ගෙවීම් රිසිට්පත යොමු කරන්න", btnWithdraw: "මුදල් ගැනීම (Withdrawal)", btnWithdrawSub: "මුදල් ලබාගැනීමට ඉල්ලන්න",
         btnLogout: "ඉවත් වන්න (Logout)", descLogout: "ගිණුමෙන් ඉවත් වන්න", homeNotice: "මෙය ස්වාධීන නියෝජිත සේවාවක් වන අතර 888Starz නිල වෙබ් අඩවිය නොවේ.",
-        depositTitle: "තැන්පතු ඉල්ලීම", depositDesc: "පහත නියෝජිත බැංකු ගිණුමකට මුදල් බැර කර රිසිට්පත Upload කරන්න.",
-        lblSelectAgent: "නියෝජිතයා (Agent) තෝරන්න", lblReceipt: "ගෙවීම් රිසිට්පත", txtUpload: "රිසිට්පත Upload කරන්න", lblAmount: "තැන්පතු මුදල", lblName: "ඔබේ නම", lblGameId: "ගිණුම් අංකය (Game ID)",
+        depositTitle: "තැන්පතු ඉල්ලීම", depositDesc: "ගෙවීම් රිසිට්පත උඩුගත කර පහත විස්තර සම්පූර්ණ කරන්න.",
+        lblReceipt: "ගෙවීම් රිසිට්පත", txtUpload: "රිසිට්පත Upload කරන්න", lblAmount: "තැන්පතු මුදල", lblName: "ඔබේ නම", lblGameId: "ගිණුම් අංකය (Game ID)",
         lblWhatsapp: "WHATSAPP අංකය", btnSubmitDeposit: "තැන්පතු ඉල්ලීම යොමු කරන්න",
         withdrawTitle: "මුදල් ලබාගැනීමේ ඉල්ලීම", withdrawDesc: "මුදල් ආපසු ගැනීම සඳහා ඔබගේ විස්තර ඇතුළත් කරන්න.", txtImportant: "වැදගත්",
         txtWithdrawInfo: "තොරතුරු යැවීමට පෙර සියලුම විස්තර නිවැරදි දැයි නැවත පරීක්ෂා කරන්න.",
         lblWithdrawAmount: "ලබාගන්නා මුදල", lblBankDetails: "ගෙවීම් / බැංකු විස්තර", btnSubmitWithdraw: "මුදල් ලබාගැනීමේ ඉල්ලීම යොමු කරන්න",
         titleSettings: "සැකසුම් (Settings)", lblTheme: "Dark Mode", descTheme: "Light සහ Dark තිම මාරු කරන්න",
         lblLanguage: "භාෂාව (Language)", descLanguage: "පද්ධති භාෂාව තෝරන්න",
-        lblNotif: "දැනුම්දීම්", descNotif: "ගනුදෙනු යාවත්කාලීන ලබාගන්න", lblSupport: "නියෝජිත සහාය", descSupport: "Live Chat පහසුකම භාවිත කරන්න",
+        lblNotif: "දැනුම්දීම්", descNotif: "ගනුදෙනු යාවත්කාලීන ලබාගන්න", lblSupport: "නියෝජිත සහාය", descSupport: "WhatsApp මගින් සම්බන්ධ වන්න",
         navHome: "මුල් පිටුව", navDeposit: "තැන්පතු", navWithdraw: "ලබාගැනීම්", navSettings: "සැකසුම්",
         phAmount: "තැන්පතු මුදල ඇතුළත් කරන්න", phName: "ඔබේ නම ඇතුළත් කරන්න", phGameId: "Game ID එක ඇතුළත් කරන්න", phWhatsapp: "WhatsApp අංකය ඇතුළත් කරන්න",
         phWAmount: "ලබාගන්නා මුදල ඇතුළත් කරන්න", phDetails: "බැංකු හෝ ගෙවීම් විස්තර ඇතුළත් කරන්න",
-        msgFillAll: "කරුණාකර සියලු විස්තර පුරවා රිසිට්පත Upload කරන්න.", msgDepSuccess: "තැන්පතු ඉල්ලීම සාර්ථකව යොමු කෙරිණි! (සාමාන්‍ය කාලය: විනාඩි 15)",
+        msgFillAll: "කරුණාකර සියලු විස්තර පුරවා රිසිට්පත Upload කරන්න.", msgDepSuccess: "තැන්පතු ඉල්ලීම සාර්ථකව යොමු කෙරිණි!",
         msgFillAllW: "කරුණාකර සියලුම විස්තර ඇතුළත් කරන්න.", msgWSuccess: "මුදල් ලබාගැනීමේ ඉල්ලීම සාර්ථකව යොමු කෙරිණි!"
     },
     ta: {
@@ -128,19 +81,19 @@ const translations = {
         slide3Small: "24/7 ஆதரவு", slide3Title: "முகவர் ஆதரவு", slide3Desc: "உங்களுக்குத் தேவையான போதெல்லாம் உதவி பெறுங்கள்.",
         btnDeposit: "வைப்பு (Deposit)", btnDepositSub: "ரசீதை சமர்ப்பிக்கவும்", btnWithdraw: "திரும்பப் பெறல்", btnWithdrawSub: "பணத்தை கோருங்கள்",
         btnLogout: "வெளியேறு", descLogout: "கணக்கிலிருந்து வெளியேறவும்", homeNotice: "இது ஒரு சுயாதீன முகவர் சேவையாகும், அதிகாரப்பூர்வ வலைத்தளம் அல்ல.",
-        depositTitle: "வைப்பு கோரிக்கை", depositDesc: "கீழேயுள்ள முகவர் வங்கி கணக்கிற்கு பணம் அனுப்பி ரசீதை பதிவேற்றவும்.",
-        lblSelectAgent: "முகவரைத் தேர்ந்தெடுக்கவும்", lblReceipt: "பணம் செலுத்திய ரசீது", txtUpload: "ரசீதை பதிவேற்றவும்", lblAmount: "வைப்புத் தொகை", lblName: "பெயர்", lblGameId: "கேம் ஐடி (Game ID)",
+        depositTitle: "வைப்பு கோரிக்கை", depositDesc: "ரசீதை பதிவேற்றி கீழே உள்ள விவரங்களை பூர்த்தி செய்யவும்.",
+        lblReceipt: "பணம் செலுத்திய ரசீது", txtUpload: "ரசீதை பதிவேற்றவும்", lblAmount: "வைப்புத் தொகை", lblName: "பெயர்", lblGameId: "கேம் ஐடி (Game ID)",
         lblWhatsapp: "வாட்ஸ்அப் எண்", btnSubmitDeposit: "வைப்பு கோரிக்கையை சமர்ப்பிக்கவும்",
         withdrawTitle: "திரும்பப் பெறல் கோரிக்கை", withdrawDesc: "செயலாக்கத்திற்கு உங்கள் விவரங்களை உள்ளிடவும்.", txtImportant: "முக்கியமானது",
         txtWithdrawInfo: "சமர்ப்பிப்பதற்கு முன் அனைத்து விவரங்களையும் மீண்டும் சரிபார்க்கவும்.",
-        lblWithdrawAmount: "திரும்பப் பெறும் தொகை", lblBankDetails: "வங்கி / கட்டண விவரங்கள்", btnSubmitWithdraw: "திரும்பப் பெறல் கோரிக்கை சமர்ப்பிக்கவும்",
+        lblWithdrawAmount: "திரும்பப் பெறும் தொகை", lblBankDetails: "வங்கி / கட்டண விவரங்கள்", btnSubmitWithdraw: "திரும்பப் பெறல் கோரிக்கையை சமர்ப்பிக்கவும்",
         titleSettings: "அமைப்புகள்", lblTheme: "Dark Mode", descTheme: "Light மற்றும் Dark மோடை மாற்றவும்",
         lblLanguage: "மொழி (Language)", descLanguage: "மொழியைத் தேர்ந்தெடுக்கவும்",
-        lblNotif: "அறிவிப்புகள்", descNotif: "புதுப்பிப்புகளைப் பெறுங்கள்", lblSupport: "முகவர் ஆதரவு", descSupport: "நேரடி அரட்டையைப் பயன்படுத்தவும்",
+        lblNotif: "அறிவிப்புகள்", descNotif: "புதுப்பிப்புகளைப் பெறுங்கள்", lblSupport: "முகவர் ஆதரவு", descSupport: "வாட்ஸ்அப் ஆதரவை தொடர்பு கொள்ளவும்",
         navHome: "முகப்பு", navDeposit: "வைப்பு", navWithdraw: "திரும்பப் பெறல்", navSettings: "அமைப்புகள்",
         phAmount: "வைப்புத் தொகையை உள்ளிடவும்", phName: "உங்கள் பெயரை உள்ளிடவும்", phGameId: "Game ID ஐ உள்ளிடவும்", phWhatsapp: "வாட்ஸ்அப் எண்ணை உள்ளிடவும்",
         phWAmount: "தொகையை உள்ளிடவும்", phDetails: "வங்கி விவரங்களை உள்ளிடவும்",
-        msgFillAll: "அனைத்து புலங்களையும் நிரப்பி ரசீதை பதிவேற்றவும்.", msgDepSuccess: "வைப்பு கோரிக்கை வெற்றிகரமாக சமர்ப்பிக்கப்பட்டது! (நேரம்: 15 நிமிடங்கள்)",
+        msgFillAll: "அனைத்து புலங்களையும் நிரப்பி ரசீதை பதிவேற்றவும்.", msgDepSuccess: "வைப்பு கோரிக்கை வெற்றிகரமாக சமர்ப்பிக்கப்பட்டது!",
         msgFillAllW: "அனைத்து புலங்களையும் நிரப்பவும்.", msgWSuccess: "திரும்பப் பெறல் கோரிக்கை வெற்றிகரமாக சமர்ப்பிக்கப்பட்டது!"
     }
 };
@@ -196,144 +149,45 @@ function initTheme() {
     }
 }
 
-// SOUND EFFECTS
+// SAFE SUCCESS NOTIFICATION SOUND
 function playSuccessSound() {
     try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if (!AudioContext) return;
+        
         const ctx = new AudioContext();
-        if (ctx.state === 'suspended') ctx.resume();
+        if (ctx.state === 'suspended') {
+            ctx.resume();
+        }
+        
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
+        
         osc.type = "sine";
         osc.frequency.setValueAtTime(587.33, ctx.currentTime); 
         osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1); 
+        
         gain.gain.setValueAtTime(0.1, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+        
         osc.connect(gain);
         gain.connect(ctx.destination);
+        
         osc.start();
         osc.stop(ctx.currentTime + 0.35);
     } catch (e) {
-        console.warn("Audio error:", e);
+        console.warn("Audio Context Error suppressed:", e);
     }
 }
 
-function playNotificationSound() {
-    try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (!AudioContext) return;
-        const ctx = new AudioContext();
-        if (ctx.state === 'suspended') ctx.resume();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(523.25, ctx.currentTime);
-        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.12);
-        gain.gain.setValueAtTime(0.15, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.3);
-    } catch (e) {
-        console.warn("Notification sound error:", e);
-    }
-}
-
-function renderSelectedAgent(agent) {
-    const nameEl = document.getElementById("agentName");
-    const roleEl = document.getElementById("agentRole");
-    const avatarEl = document.getElementById("agentAvatar");
-    const cardEl = document.getElementById("agentStatusCard");
-    const bankContainer = document.getElementById("bankCardsContainer");
-
-    if (nameEl) nameEl.textContent = agent.name;
-    if (roleEl) roleEl.textContent = agent.role;
-    if (avatarEl) avatarEl.textContent = agent.avatar;
-
-    if (cardEl) {
-        cardEl.classList.remove("pod-style");
-        void cardEl.offsetWidth; 
-        cardEl.classList.add("pod-style");
-    }
-
-    if (bankContainer) {
-        bankContainer.innerHTML = agent.banks.map(bank => `
-            <div class="bank-card-item fade-in">
-                <div class="bank-header">
-                    <span class="bank-name">${bank.bankName}</span>
-                    <button class="copy-btn" onclick="copyAccNumber('${bank.accNum}')">
-                        <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" fill="none" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                        COPY
-                    </button>
-                </div>
-                <div class="acc-number">${bank.accNum}</div>
-                <div class="acc-name">Account Holder: <strong>${bank.accName}</strong></div>
-            </div>
-        `).join('');
-    }
-}
-
-function setupOnlineAgentSystem() {
-    const selectEl = document.getElementById("agentSelect");
-    if (!selectEl) return;
-
-    selectEl.innerHTML = onlineAgents.map(ag => `<option value="${ag.id}">${ag.name}</option>`).join("");
-    renderSelectedAgent(onlineAgents[0]);
-
-    selectEl.addEventListener("change", (e) => {
-        const found = onlineAgents.find(a => a.id === e.target.value);
-        if (found) renderSelectedAgent(found);
-    });
-}
-
-window.copyAccNumber = function(accNum) {
-    navigator.clipboard.writeText(accNum).then(() => {
-        showToast("Bank Account Number Copied!");
-    }).catch(() => {
-        showToast("Copied: " + accNum);
-    });
-};
-
-function showToast(text) {
+// SUCCESS TOAST NOTIFICATION
+function showToast(message) {
+    playSuccessSound();
     const toast = document.getElementById("toast");
     if (toast) {
-        toast.textContent = text;
+        toast.textContent = message;
         toast.classList.add("show");
-        setTimeout(() => toast.classList.remove("show"), 2500);
-    }
-}
-
-let isSuccessAction = false;
-function showCustomModal(title, message, type = "success") {
-    isSuccessAction = (type === "success");
-    if (type === "success") playSuccessSound();
-
-    const popup = document.getElementById("successPopup");
-    const popupTitle = document.getElementById("popupTitle");
-    const popupMsg = document.getElementById("popupMessage");
-    const popupIcon = popup ? popup.querySelector(".popup-icon") : null;
-
-    if (popup && popupMsg && popupTitle) {
-        popupTitle.textContent = title;
-        popupMsg.textContent = message;
-
-        if (type === "error") {
-            if (popupIcon) {
-                popupIcon.style.background = "rgba(255, 77, 77, 0.15)";
-                popupIcon.style.color = "#ff4d4d";
-                popupIcon.innerHTML = `<svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
-            }
-        } else {
-            if (popupIcon) {
-                popupIcon.style.background = "rgba(32, 214, 107, 0.15)";
-                popupIcon.style.color = "var(--green)";
-                popupIcon.innerHTML = `<svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-            }
-        }
-
-        popup.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 3500);
     }
 }
 
@@ -345,11 +199,6 @@ function showPage(page) {
     document.querySelectorAll(".nav-btn").forEach(btn => {
         btn.classList.toggle("active", btn.dataset.page === page);
     });
-    
-    if (page === "deposit") {
-        setupOnlineAgentSystem();
-    }
-    
     window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
@@ -379,7 +228,7 @@ function renderUserInfo(user) {
     }
 }
 
-// TELEGRAM API INTEGRATION
+// TELEGRAM PHOTO SENDER
 function sendTelegramPhoto(file, caption) {
     return new Promise((resolve, reject) => {
         const formData = new FormData();
@@ -392,14 +241,22 @@ function sendTelegramPhoto(file, caption) {
         xhr.open("POST", `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, true);
 
         xhr.onload = function () {
-            if (xhr.status >= 200 && xhr.status < 300) resolve(JSON.parse(xhr.responseText));
-            else reject(new Error("Telegram Error: " + xhr.responseText));
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(JSON.parse(xhr.responseText));
+            } else {
+                reject(new Error("Telegram Error: " + xhr.responseText));
+            }
         };
-        xhr.onerror = function () { reject(new Error("Network Error")); };
+
+        xhr.onerror = function () {
+            reject(new Error("Network Error occurred while reaching Telegram."));
+        };
+
         xhr.send(formData);
     });
 }
 
+// TELEGRAM TEXT SENDER
 function sendTelegramText(textMessage) {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
@@ -407,151 +264,22 @@ function sendTelegramText(textMessage) {
         xhr.setRequestHeader("Content-Type", "application/json");
 
         xhr.onload = function () {
-            if (xhr.status >= 200 && xhr.status < 300) resolve(JSON.parse(xhr.responseText));
-            else reject(new Error("Telegram Error: " + xhr.responseText));
-        };
-        xhr.onerror = function () { reject(new Error("Network Error")); };
-        xhr.send(JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: textMessage, parse_mode: "Markdown" }));
-    });
-}
-
-function sendTelegramVoice(blob, caption) {
-    return new Promise((resolve, reject) => {
-        const formData = new FormData();
-        formData.append("chat_id", TELEGRAM_CHAT_ID);
-        formData.append("voice", blob, "voice_note.ogg");
-        formData.append("caption", caption);
-        formData.append("parse_mode", "Markdown");
-
-        const xhr = new XMLHttpRequest();
-        xhr.open("POST", `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendVoice`, true);
-        xhr.onload = () => (xhr.status >= 200 && xhr.status < 300) ? resolve(JSON.parse(xhr.responseText)) : reject(new Error(xhr.responseText));
-        xhr.onerror = () => reject(new Error("Network Error"));
-        xhr.send(formData);
-    });
-}
-
-// STRICT DUPLICATE-PREVENTING TELEGRAM POLLING
-let lastTelegramUpdateId = 0;
-let isPollingActive = false;
-const processedTelegramMsgIds = new Set(); 
-
-function pollTelegramAgentReplies() {
-    if (isPollingActive) return;
-    isPollingActive = true;
-
-    setInterval(async () => {
-        try {
-            const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?offset=${lastTelegramUpdateId + 1}`);
-            const data = await res.json();
-            
-            if (data.ok && data.result.length > 0) {
-                for (let update of data.result) {
-                    lastTelegramUpdateId = update.update_id;
-                    
-                    if (update.message && update.message.reply_to_message) {
-                        const replyText = update.message.text || "[Voice/Media Reply]";
-                        const telegramMsgId = update.message.message_id;
-
-                        if (processedTelegramMsgIds.has(telegramMsgId)) continue;
-                        processedTelegramMsgIds.add(telegramMsgId);
-
-                        const originalMsg = update.message.reply_to_message.text || update.message.reply_to_message.caption || "";
-                        const userIdMatch = originalMsg.match(/User ID:\s*([A-Za-z0-9_-]+)/i);
-                        const targetUserId = userIdMatch ? userIdMatch[1].trim() : null;
-
-                        if (targetUserId) {
-                            const checkQuery = query(
-                                chatsCollection, 
-                                where("telegramMsgId", "==", telegramMsgId)
-                            );
-                            const existingDocs = await getDocs(checkQuery);
-
-                            if (existingDocs.empty) {
-                                await addDoc(chatsCollection, {
-                                    text: replyText,
-                                    sender: "agent",
-                                    userId: targetUserId,
-                                    telegramMsgId: telegramMsgId,
-                                    createdAt: serverTimestamp()
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (e) {
-            console.warn("Polling error:", e);
-        }
-    }, 3500); 
-}
-
-// LISTEN TO FIRESTORE LIVE CHATS (HANDLES TEXT, IMAGE, VOICE RENDERING)
-let chatUnsubscribe = null;
-let lastMessageCount = 0;
-
-function listenForLiveChats(user) {
-    const chatMessagesContainer = document.getElementById("chatMessages");
-    if (!chatMessagesContainer) return;
-
-    if (chatUnsubscribe) chatUnsubscribe();
-
-    if (!user) {
-        chatMessagesContainer.innerHTML = `<div class="msg agent">කරුණාකර ප්‍රථමයෙන් Login වන්න.</div>`;
-        return;
-    }
-
-    const q = query(
-        chatsCollection, 
-        where("userId", "==", user.uid)
-    );
-
-    chatUnsubscribe = onSnapshot(q, (snapshot) => {
-        chatMessagesContainer.innerHTML = `
-            <div class="msg agent">
-                සාදරයෙන් පිළිගන්නවා! ඔබට අවශ්‍ය ඕනෑම සහායක් මෙතැනින් විමසන්න.
-            </div>
-        `;
-
-        const docs = [];
-        snapshot.forEach((doc) => {
-            docs.push({ id: doc.id, ...doc.data() });
-        });
-
-        docs.sort((a, b) => {
-            const timeA = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : a.createdAt) : 0;
-            const timeB = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : b.createdAt) : 0;
-            return timeA - timeB;
-        });
-
-        if (docs.length > lastMessageCount && lastMessageCount > 0) {
-            const latestMsg = docs[docs.length - 1];
-            if (latestMsg && latestMsg.sender === "agent") {
-                playNotificationSound();
-                showToast("New message from agent!");
-            }
-        }
-        lastMessageCount = docs.length;
-
-        docs.forEach((data) => {
-            const msgDiv = document.createElement("div");
-            msgDiv.className = `msg ${data.sender === "user" ? "user" : "agent"}`;
-            
-            // Render text, images or voice messages in chat box
-            if (data.imageUrl) {
-                msgDiv.innerHTML = `<img src="${data.imageUrl}" style="max-width:100%; border-radius:8px;" />`;
-            } else if (data.voiceUrl) {
-                msgDiv.innerHTML = `<audio controls style="max-width:200px;"><source src="${data.voiceUrl}" type="audio/ogg"></audio>`;
+            if (xhr.status >= 200 && xhr.status < 300) {
+                resolve(JSON.parse(xhr.responseText));
             } else {
-                msgDiv.textContent = data.text;
+                reject(new Error("Telegram Error: " + xhr.responseText));
             }
+        };
 
-            chatMessagesContainer.appendChild(msgDiv);
-        });
+        xhr.onerror = function () {
+            reject(new Error("Network Error while reaching Telegram."));
+        };
 
-        chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
-    }, (error) => {
-        console.error("Firestore Chat Error:", error);
+        xhr.send(JSON.stringify({
+            chat_id: TELEGRAM_CHAT_ID,
+            text: textMessage,
+            parse_mode: "Markdown"
+        }));
     });
 }
 
@@ -560,208 +288,38 @@ document.addEventListener("DOMContentLoaded", () => {
     setLanguage(currentLang);
     renderUserInfo(auth.currentUser);
 
-    const toggleChatBtn = document.getElementById("toggleChatBtn");
-    const closeChatBtn = document.getElementById("closeChatBtn");
-    const chatBox = document.getElementById("chatBox");
-    const sendChatBtn = document.getElementById("sendChatBtn");
-    const chatInput = document.getElementById("chatInput");
-    const openChatFromSettings = document.getElementById("openChatFromSettings");
-
-    const toggleChat = () => chatBox.classList.toggle("open");
-    toggleChatBtn?.addEventListener("click", toggleChat);
-    closeChatBtn?.addEventListener("click", () => chatBox.classList.remove("open"));
-    openChatFromSettings?.addEventListener("click", () => {
-        chatBox.classList.add("open");
-    });
-
-    // 1. DIRECT CALL / WHATSAPP ACTION
-    document.getElementById("btnCallAgent")?.addEventListener("click", () => {
-        window.open(`https://wa.me/${AGENT_WHATSAPP_NUMBER}`, "_blank");
-    });
-
-    // 2. TEXT MESSAGE SENDING
-    async function handleSendMessage() {
-        const text = chatInput.value.trim();
-        if (!text) return;
-
-        const currentUser = auth.currentUser;
-        if (!currentUser) return showToast("Please Log In First!");
-
-        chatInput.value = "";
-        const userName = localStorage.getItem("userName") || currentUser.displayName || "Guest User";
-        const userEmail = currentUser.email || "N/A";
-        const userId = currentUser.uid;
-
-        try {
-            await addDoc(chatsCollection, {
-                text: text,
-                sender: "user",
-                userName: userName,
-                userEmail: userEmail,
-                userId: userId,
-                createdAt: serverTimestamp()
-            });
-
-            const userQuery = query(chatsCollection, where("userId", "==", userId));
-            const userDocs = await getDocs(userQuery);
-            
-            if (userDocs.size <= 1) {
-                await addDoc(chatsCollection, {
-                    text: "සේවා නියෝජිතයකු සමග සම්බන්ධ වෙන තුරු මොහොතක් රැදී සිටින්න.",
-                    sender: "agent",
-                    userId: userId,
-                    autoReply: true,
-                    createdAt: serverTimestamp()
-                });
-            }
-        } catch (e) {
-            console.error("Firestore Save Error:", e);
-        }
-
-        const caption = `💬 *LIVE CHAT SUPPORT MESSAGE*\n\n` +
-                        `👤 *User Name:* ${userName}\n` +
-                        `📧 *Email:* ${userEmail}\n` +
-                        `🆔 *User ID:* ${userId}\n` +
-                        `💬 *Message:* ${text}\n` +
-                        `⏰ *Time:* ${new Date().toLocaleTimeString()}\n\n` +
-                        `👉 *Reply to this message to send reply to user.*`;
-
-        try {
-            await sendTelegramText(caption);
-        } catch (e) {
-            console.warn("Chat Telegram notification failed", e);
-        }
-    }
-
-    sendChatBtn?.addEventListener("click", handleSendMessage);
-    chatInput?.addEventListener("keypress", (e) => {
-        if (e.key === "Enter") handleSendMessage();
-    });
-
-    // 3. CHAT IMAGE UPLOADER
-    const chatImageInput = document.getElementById("chatImageInput");
-    const btnChatUploadImg = document.getElementById("btnChatUploadImg");
-
-    btnChatUploadImg?.addEventListener("click", () => chatImageInput?.click());
-
-    chatImageInput?.addEventListener("change", async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const currentUser = auth.currentUser;
-        if (!currentUser) return showToast("Please Log In First!");
-
-        const userName = localStorage.getItem("userName") || currentUser.displayName || "User";
-        const userId = currentUser.uid;
-
-        showToast("Uploading Image...");
-
-        const caption = `🖼️ *LIVE CHAT IMAGE*\n\n👤 *User:* ${userName}\n🆔 *User ID:* ${userId}`;
-        try {
-            await sendTelegramPhoto(file, caption);
-            await addDoc(chatsCollection, {
-                text: "📷 [Image Sent]",
-                sender: "user",
-                userId: userId,
-                createdAt: serverTimestamp()
-            });
-            showToast("Image Sent!");
-        } catch (err) {
-            console.error("Image Upload Error:", err);
-            showToast("Failed to send image.");
-        }
-        chatImageInput.value = "";
-    });
-
-    // 4. VOICE RECORDING AND SENDING SYSTEM
-    let mediaRecorder;
-    let audioChunks = [];
-    let isRecording = false;
-    const btnChatRecordVoice = document.getElementById("btnChatRecordVoice");
-
-    btnChatRecordVoice?.addEventListener("click", async () => {
-        const currentUser = auth.currentUser;
-        if (!currentUser) return showToast("Please Log In First!");
-
-        if (!isRecording) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-
-                mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
-                
-                mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: "audio/ogg; codecs=opus" });
-                    const userName = localStorage.getItem("userName") || currentUser.displayName || "User";
-                    const userId = currentUser.uid;
-
-                    showToast("Sending Voice Message...");
-
-                    const caption = `🎙️ *LIVE CHAT VOICE MESSAGE*\n\n👤 *User:* ${userName}\n🆔 *User ID:* ${userId}`;
-                    
-                    try {
-                        await sendTelegramVoice(audioBlob, caption);
-                        await addDoc(chatsCollection, {
-                            text: "🎙️ [Voice Message]",
-                            sender: "user",
-                            userId: userId,
-                            createdAt: serverTimestamp()
-                        });
-                        showToast("Voice Message Sent!");
-                    } catch (err) {
-                        console.error("Voice Error:", err);
-                        showToast("Failed to send voice message.");
-                    }
-                };
-
-                mediaRecorder.start();
-                isRecording = true;
-                btnChatRecordVoice.style.color = "#ff4d4d";
-                showToast("Recording Voice... Click again to send.");
-            } catch (err) {
-                console.error("Mic Access Error:", err);
-                showToast("Microphone permission denied.");
-            }
-        } else {
-            if (mediaRecorder && isRecording) {
-                mediaRecorder.stop();
-                mediaRecorder.stream.getTracks().forEach(track => track.stop());
-                isRecording = false;
-                btnChatRecordVoice.style.color = "";
-            }
-        }
-    });
-
-    pollTelegramAgentReplies();
-
-    const popupCloseBtn = document.getElementById("popupCloseBtn");
-    if (popupCloseBtn) {
-        popupCloseBtn.addEventListener("click", () => {
-            const popup = document.getElementById("successPopup");
-            if (popup) popup.classList.remove("show");
-            if (isSuccessAction) showPage("home");
-        });
-    }
-
     const toggleThemeBtn = document.getElementById("toggleThemeBtn");
     if (toggleThemeBtn) {
         toggleThemeBtn.addEventListener("click", () => {
             document.body.classList.toggle("light-mode");
             const isLight = document.body.classList.contains("light-mode");
-            toggleThemeBtn.classList.toggle("on", !isLight);
-            localStorage.setItem("appTheme", isLight ? "light" : "dark");
+            
+            if (isLight) {
+                toggleThemeBtn.classList.remove("on");
+                localStorage.setItem("appTheme", "light");
+            } else {
+                toggleThemeBtn.classList.add("on");
+                localStorage.setItem("appTheme", "dark");
+            }
         });
     }
 
-    document.getElementById("headerProfileAvatar")?.addEventListener("click", () => showPage("settings"));
+    document.getElementById("headerProfileAvatar")?.addEventListener("click", () => {
+        showPage("settings");
+    });
 
     document.querySelectorAll(".lang-option-card").forEach(card => {
-        card.addEventListener("click", () => setLanguage(card.getAttribute("data-lang")));
+        card.addEventListener("click", () => {
+            const selectedLang = card.getAttribute("data-lang");
+            setLanguage(selectedLang);
+        });
     });
 
     document.querySelectorAll("[data-page]").forEach(btn => {
-        btn.addEventListener("click", (e) => showPage(e.currentTarget.getAttribute("data-page")));
+        btn.addEventListener("click", (e) => {
+            const page = e.currentTarget.getAttribute("data-page");
+            if (page) showPage(page);
+        });
     });
 
     const slides = document.querySelectorAll(".slide");
@@ -805,10 +363,27 @@ document.addEventListener("DOMContentLoaded", () => {
                 await signOut(auth);
                 localStorage.clear();
                 window.location.href = "login.html";
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                console.error("Logout Error:", err);
+            }
         });
     }
 
+    const toggleNotifBtn = document.getElementById("toggleNotifBtn");
+    if (toggleNotifBtn) {
+        toggleNotifBtn.addEventListener("click", () => {
+            toggleNotifBtn.classList.toggle("on");
+        });
+    }
+
+    const whatsappBtn = document.getElementById("whatsappSupportBtn");
+    if (whatsappBtn) {
+        whatsappBtn.addEventListener("click", () => {
+            window.open("https://wa.me/94702883324", "_blank");
+        });
+    }
+
+    // DEPOSIT SUBMIT (GUARANTEED SUCCESS FLOW)
     const depositSubmitBtn = document.getElementById("depositSubmitBtn");
     if (depositSubmitBtn) {
         depositSubmitBtn.addEventListener("click", async () => {
@@ -821,11 +396,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const fileInput = document.getElementById("receipt");
             const file = fileInput ? fileInput.files[0] : null;
 
-            const agentSelectEl = document.getElementById("agentSelect");
-            const selectedAgentName = agentSelectEl ? agentSelectEl.options[agentSelectEl.selectedIndex].text : "Agent Suwahas";
-
             if (!file || !amount || !name || !gameId || !whatsapp) {
-                showCustomModal("Attention", t.msgFillAll, "error");
+                alert(t.msgFillAll);
                 return;
             }
 
@@ -833,11 +405,8 @@ document.addEventListener("DOMContentLoaded", () => {
             depositSubmitBtn.textContent = "...";
 
             const userId = user ? user.uid : "guest";
-            const userEmail = user ? user.email : "N/A";
             const caption = `📌 *NEW DEPOSIT REQUEST*\n\n` +
-                            `👤 *Selected Agent:* ${selectedAgentName}\n` +
                             `👤 *Name:* ${name}\n` +
-                            `📧 *Email:* ${userEmail}\n` +
                             `🎮 *Game ID:* ${gameId}\n` +
                             `💰 *Amount:* LKR ${amount}\n` +
                             `📱 *WhatsApp:* ${whatsapp}\n` +
@@ -845,10 +414,15 @@ document.addEventListener("DOMContentLoaded", () => {
                             `⏰ *Time:* ${new Date().toLocaleString()}`;
 
             try {
+                // Telegram එකට සාර්ථකව Send වීම
                 await sendTelegramPhoto(file, caption);
-            } catch (err) {
-                console.warn(err);
+            } catch (telegramErr) {
+                console.warn("Telegram Upload Warning:", telegramErr);
             } finally {
+                // Telegram එකට ගිය පසු හෝ ඕනෑම අවස්ථාවක UI එක Reset වී User ට Alert එක යයි
+                alert(t.msgDepSuccess);
+                showToast(t.msgDepSuccess);
+                
                 document.getElementById("depositAmount").value = "";
                 document.getElementById("depositName").value = "";
                 document.getElementById("gameId").value = "";
@@ -859,11 +433,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 depositSubmitBtn.disabled = false;
                 depositSubmitBtn.textContent = t.btnSubmitDeposit;
-                showCustomModal("Success!", t.msgDepSuccess, "success");
+                showPage("home");
             }
         });
     }
 
+    // WITHDRAW SUBMIT (GUARANTEED SUCCESS FLOW)
     const withdrawSubmitBtn = document.getElementById("withdrawSubmitBtn");
     if (withdrawSubmitBtn) {
         withdrawSubmitBtn.addEventListener("click", async () => {
@@ -876,7 +451,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const details = document.getElementById("withdrawDetails").value.trim();
 
             if (!name || !gameId || !amount || !whatsapp || !details) {
-                showCustomModal("Attention", t.msgFillAllW, "error");
+                alert(t.msgFillAllW);
                 return;
             }
 
@@ -884,10 +459,8 @@ document.addEventListener("DOMContentLoaded", () => {
             withdrawSubmitBtn.textContent = "...";
 
             const userId = user ? user.uid : "guest";
-            const userEmail = user ? user.email : "N/A";
             const textMessage = `🔻 *NEW WITHDRAWAL REQUEST*\n\n` +
                                 `👤 *Name:* ${name}\n` +
-                                `📧 *Email:* ${userEmail}\n` +
                                 `🎮 *Game ID:* ${gameId}\n` +
                                 `💰 *Amount:* LKR ${amount}\n` +
                                 `📱 *WhatsApp:* ${whatsapp}\n` +
@@ -898,8 +471,11 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 await sendTelegramText(textMessage);
             } catch (err) {
-                console.warn(err);
+                console.warn("Telegram text warning:", err);
             } finally {
+                alert(t.msgWSuccess);
+                showToast(t.msgWSuccess);
+
                 document.getElementById("withdrawName").value = "";
                 document.getElementById("withdrawGameId").value = "";
                 document.getElementById("withdrawAmount").value = "";
@@ -908,22 +484,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 withdrawSubmitBtn.disabled = false;
                 withdrawSubmitBtn.textContent = t.btnSubmitWithdraw;
-                showCustomModal("Success!", t.msgWSuccess, "success");
+                showPage("home");
             }
         });
     }
 });
 
-// AUTHENTICATION LISTENER
 onAuthStateChanged(auth, (user) => {
     if (user) {
         localStorage.setItem("firebaseLoggedIn", "true");
         localStorage.setItem("userName", user.displayName || "");
         localStorage.setItem("userEmail", user.email || "");
-        localStorage.setItem("userId", user.uid);
         renderUserInfo(user);
-        
-        listenForLiveChats(user);
     } else {
         const isLogged = localStorage.getItem("firebaseLoggedIn");
         if (!isLogged && !window.location.pathname.includes("login.html")) {

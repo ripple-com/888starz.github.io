@@ -1,6 +1,14 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+import { 
+    getFirestore, 
+    collection, 
+    addDoc, 
+    query, 
+    orderBy, 
+    onSnapshot, 
+    serverTimestamp 
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 import { getStorage } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-storage.js";
 
 // TELEGRAM BOT CONFIGURATION
@@ -21,6 +29,8 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+
+const chatsCollection = collection(db, "live_chats");
 
 // ONLINE AGENTS LIST FOR DEPOSIT SUGGESTIONS
 const onlineAgents = [
@@ -184,7 +194,6 @@ function initTheme() {
     }
 }
 
-// SUCCESS SOUND
 function playSuccessSound() {
     try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -207,7 +216,6 @@ function playSuccessSound() {
     }
 }
 
-// RENDER AGENT DETAILS WITH POD-STYLE ANIMATION
 function renderSelectedAgent(agent) {
     const nameEl = document.getElementById("agentName");
     const roleEl = document.getElementById("agentRole");
@@ -378,6 +386,63 @@ function sendTelegramText(textMessage) {
     });
 }
 
+// TELEGRAM REPLIES POLLING (REALTIME AGENT REPLIES CATCHER)
+let lastTelegramUpdateId = 0;
+function pollTelegramAgentReplies() {
+    setInterval(async () => {
+        try {
+            const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getUpdates?offset=${lastTelegramUpdateId + 1}`);
+            const data = await res.json();
+            
+            if (data.ok && data.result.length > 0) {
+                for (let update of data.result) {
+                    lastTelegramUpdateId = update.update_id;
+                    
+                    // Check if message is a reply from Agent
+                    if (update.message && update.message.reply_to_message) {
+                        const replyText = update.message.text;
+                        
+                        // Save Agent Reply to Firestore
+                        await addDoc(chatsCollection, {
+                            text: replyText,
+                            sender: "agent",
+                            createdAt: serverTimestamp()
+                        });
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn("Polling error:", e);
+        }
+    }, 3000); // Polls Telegram every 3 seconds
+}
+
+// LISTEN TO FIRESTORE LIVE CHAT MESSAGES
+function listenForLiveChats() {
+    const chatMessagesContainer = document.getElementById("chatMessages");
+    const q = query(chatsCollection, orderBy("createdAt", "asc"));
+
+    onSnapshot(q, (snapshot) => {
+        if (!chatMessagesContainer) return;
+
+        chatMessagesContainer.innerHTML = `
+            <div class="msg agent">
+                සාදරයෙන් පිළිගන්නවා! ඔබට අවශ්‍ය ඕනෑම සහායක් මෙතැනින් විමසන්න.
+            </div>
+        `;
+
+        snapshot.forEach((doc) => {
+            const data = doc.data();
+            const msgDiv = document.createElement("div");
+            msgDiv.className = `msg ${data.sender === "user" ? "user" : "agent"}`;
+            msgDiv.textContent = data.text;
+            chatMessagesContainer.appendChild(msgDiv);
+        });
+
+        chatMessagesContainer.scrollTop = chatMessagesContainer.scrollHeight;
+    });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     initTheme();
     setLanguage(currentLang);
@@ -389,7 +454,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const chatBox = document.getElementById("chatBox");
     const sendChatBtn = document.getElementById("sendChatBtn");
     const chatInput = document.getElementById("chatInput");
-    const chatMessages = document.getElementById("chatMessages");
     const openChatFromSettings = document.getElementById("openChatFromSettings");
 
     const toggleChat = () => chatBox.classList.toggle("open");
@@ -403,20 +467,27 @@ document.addEventListener("DOMContentLoaded", () => {
         const text = chatInput.value.trim();
         if (!text) return;
 
-        // Render User Message locally
-        const userMsg = document.createElement("div");
-        userMsg.className = "msg user";
-        userMsg.textContent = text;
-        chatMessages.appendChild(userMsg);
         chatInput.value = "";
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+        const userName = localStorage.getItem("userName") || "Guest User";
+
+        // Save User Message to Firestore
+        try {
+            await addDoc(chatsCollection, {
+                text: text,
+                sender: "user",
+                userName: userName,
+                createdAt: serverTimestamp()
+            });
+        } catch (e) {
+            console.error("Firestore Save Error:", e);
+        }
 
         // Forward to Telegram Agent Bot
-        const userName = localStorage.getItem("userName") || "Guest User";
         const caption = `💬 *LIVE CHAT SUPPORT MESSAGE*\n\n` +
                         `👤 *User Name:* ${userName}\n` +
                         `💬 *Message:* ${text}\n` +
-                        `⏰ *Time:* ${new Date().toLocaleTimeString()}`;
+                        `⏰ *Time:* ${new Date().toLocaleTimeString()}\n\n` +
+                        `👉 *Reply to this message to send reply to user.*`;
 
         try {
             await sendTelegramText(caption);
@@ -429,6 +500,10 @@ document.addEventListener("DOMContentLoaded", () => {
     chatInput?.addEventListener("keypress", (e) => {
         if (e.key === "Enter") handleSendMessage();
     });
+
+    // Start Live Sync and Polling
+    listenForLiveChats();
+    pollTelegramAgentReplies();
 
     const popupCloseBtn = document.getElementById("popupCloseBtn");
     if (popupCloseBtn) {
